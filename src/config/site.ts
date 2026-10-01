@@ -35,10 +35,10 @@ export const site: SiteConfig = {
   ],
   facts: {
     Currently: 'Building side projects & learning Astro', // TODO
-    'Based in': '', // TODO e.g. 'Kuala Lumpur'
+    'Based in': 'Kuala Lumpur', // TODO e.g. 'Kuala Lumpur'
     Studied: 'Computer Science, Swinburne University',
   },
-  interests: ['Web development', 'Design', 'Tech', 'Coffee'], // TODO
+  interests: ['Coding', 'Tech', 'Sports', 'Building'], // TODO
 
   toolkit: {
     Frontend: ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Astro'],
@@ -46,11 +46,11 @@ export const site: SiteConfig = {
     Tools: ['Git & GitHub', 'Linux', 'VS Code', 'Figma'], // TODO
   },
 
-  email: 'hello@williamchanwinghong.com', // TODO: a real inbox
+  email: 'williamchan388@gmail.com', // TODO: a real inbox
   socials: {
     GitHub: 'https://github.com/williamchan24', // TODO
     LinkedIn: 'https://www.linkedin.com/in/william-chan-wing-hong/', // TODO
-    Instagram: '', // TODO — empty hides it
+    Strava: 'https://www.strava.com/athletes/185667676', // TODO — empty hides it
   },
 
   cv: null, // e.g. '/William-Chan-CV.pdf' (put the PDF in /public)
