@@ -1,0 +1,9 @@
+---
+import MessagePage from '../components/MessagePage.astro';
+import { site } from '../config/site';
+---
+
+<MessagePage title={`Page not found · ${site.shortName}`} heading="404">
+  <p>That page doesn't exist.</p>
+  <a class="btn" href="/">Back to home</a>
+</MessagePage>

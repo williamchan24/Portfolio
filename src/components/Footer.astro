@@ -1,0 +1,15 @@
+---
+import { site, activeSocials } from '../config/site';
+const year = new Date().getFullYear(); // set when you build — rebuild once a year to update it
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <p>© {year} {site.name}</p>
+    <ul class="socials">
+      {activeSocials.map(([label, url]) => (
+        <li><a href={url} target="_blank" rel="noopener">{label}</a></li>
+      ))}
+    </ul>
+  </div>
+</footer>

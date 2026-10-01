@@ -1,0 +1,28 @@
+---
+/**
+ * Files in src/pages/ become pages: index.astro → /, 404.astro → /404.html, etc.
+ * This page just stacks the section components in order.
+ */
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Projects from '../components/Projects.astro';
+import Toolkit from '../components/Toolkit.astro';
+import Contact from '../components/Contact.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../config/site';
+---
+
+<Base title={site.name}>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <Header />
+  <main id="main">
+    <Hero />
+    <About />
+    <Projects />
+    <Toolkit />
+    <Contact />
+  </main>
+  <Footer />
+</Base>

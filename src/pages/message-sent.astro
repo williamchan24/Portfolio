@@ -1,0 +1,10 @@
+---
+// Shown after the contact form is sent with JavaScript turned off.
+import MessagePage from '../components/MessagePage.astro';
+import { site } from '../config/site';
+---
+
+<MessagePage title={`Message sent · ${site.shortName}`} heading="Thanks!">
+  <p>Your message has been sent — I'll get back to you soon.</p>
+  <a class="btn" href="/">Back to home</a>
+</MessagePage>

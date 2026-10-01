@@ -1,0 +1,36 @@
+---
+import { Image } from 'astro:assets';
+import { render, type CollectionEntry } from 'astro:content';
+
+// Props are typed straight from the collection schema in src/content.config.ts
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { title, tech, image, live, repo } = project.data;
+
+// render() turns the Markdown body of the file into a component we can drop in.
+const { Content } = await render(project);
+---
+
+<article class="card project">
+  {image
+    ? <Image src={image} alt={`Screenshot of ${title}`} width={640} loading="lazy" />
+    : <div class="project-placeholder" aria-hidden="true">{title.charAt(0)}</div>}
+
+  <div class="card-body">
+    <h3>{title}</h3>
+    <div class="project-desc"><Content /></div>
+
+    {tech.length > 0 && (
+      <ul class="tags">{tech.map((tag) => <li>{tag}</li>)}</ul>
+    )}
+
+    {(live || repo) && (
+      <div class="card-links">
+        {live && <a href={live} target="_blank" rel="noopener">Live demo ↗</a>}
+        {repo && <a href={repo} target="_blank" rel="noopener">Source code ↗</a>}
+      </div>
+    )}
+  </div>
+</article>

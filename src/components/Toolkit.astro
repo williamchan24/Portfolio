@@ -1,0 +1,17 @@
+---
+import { site } from '../config/site';
+---
+
+<section id="toolkit" class="section">
+  <div class="container">
+    <h2 class="section-title">What I work with</h2>
+    <div class="skills-grid">
+      {Object.entries(site.toolkit).map(([group, items]) => (
+        <div class="card skill-group">
+          <h3>{group}</h3>
+          <ul class="tags">{items.map((item) => <li>{item}</li>)}</ul>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

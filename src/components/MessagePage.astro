@@ -1,0 +1,21 @@
+---
+// A small reusable "card in the middle of the screen" page — used by 404 and the contact fallbacks.
+import Base from '../layouts/Base.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  title: string;
+  heading: string;
+}
+const { title, heading } = Astro.props;
+---
+
+<Base title={title}>
+  <main class="center-page">
+    <div class="center-top"><ThemeToggle /></div>
+    <div class="card form">
+      <h1>{heading}</h1>
+      <slot />
+    </div>
+  </main>
+</Base>

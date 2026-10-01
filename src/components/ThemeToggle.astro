@@ -1,0 +1,42 @@
+<button class="theme-toggle" type="button" aria-label="Toggle dark mode">
+  <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4.5"></circle>
+    <path d="M12 1.5v3M12 19.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M1.5 12h3M19.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"></path>
+  </svg>
+</button>
+
+<script>
+  // A normal <script> in a component = TypeScript that Astro bundles and runs in the browser.
+  // Astro only includes it once, even if the component is used on the page multiple times.
+  const root = document.documentElement;
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const current = (): 'light' | 'dark' =>
+    (root.dataset.theme as 'light' | 'dark' | undefined) ?? (media.matches ? 'dark' : 'light');
+
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.theme-toggle');
+
+  function syncLabels() {
+    const dark = current() === 'dark';
+    buttons.forEach((btn) => {
+      btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+      btn.setAttribute('aria-pressed', String(dark));
+    });
+  }
+
+  buttons.forEach((btn) =>
+    btn.addEventListener('click', () => {
+      const next = current() === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem('theme', next);
+      } catch {
+        /* storage blocked — theme still changes for this visit */
+      }
+      syncLabels();
+    }),
+  );
+
+  media.addEventListener('change', syncLabels);
+  syncLabels();
+</script>

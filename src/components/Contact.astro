@@ -1,0 +1,115 @@
+---
+import { site } from '../config/site';
+
+const fields = [
+  { id: 'name', label: 'Name', type: 'text', autocomplete: 'name', max: 100 },
+  { id: 'email', label: 'Email', type: 'email', autocomplete: 'email', max: 190 },
+] as const;
+---
+
+<section id="contact" class="section section-alt">
+  <div class="container contact">
+    <div>
+      <h2 class="section-title">Say hi</h2>
+      <p>Got a question, an idea, or just want to chat about something I've made? Drop me a message — I'd love to hear from you.</p>
+      <p>Prefer email? <a href={`mailto:${site.email}`}>{site.email}</a></p>
+    </div>
+
+    <!--
+      The site itself is static HTML, so the form posts to /contact.php (a small PHP file
+      that runs on the cPanel server). With JavaScript on, the script below sends it in the
+      background; with JS off, the browser posts normally and PHP redirects to a thank-you page.
+    -->
+    <form id="contact-form" class="card form" method="post" action="/contact.php">
+      <p class="alert" role="status" hidden></p>
+
+      <!-- Honeypot: hidden from humans, bots fill it in -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      {fields.map((f) => (
+        <>
+          <label for={f.id}>{f.label}</label>
+          <input id={f.id} name={f.id} type={f.type} maxlength={f.max} autocomplete={f.autocomplete} required />
+          <p class="field-error" data-error-for={f.id} hidden></p>
+        </>
+      ))}
+
+      <label for="body">Message</label>
+      <textarea id="body" name="body" rows="5" minlength="10" maxlength="5000" required></textarea>
+      <p class="field-error" data-error-for="body" hidden></p>
+
+      <button class="btn" type="submit">Send message</button>
+    </form>
+  </div>
+</section>
+
+<script>
+  type ContactResponse = { ok: boolean; message?: string; errors?: Record<string, string> };
+
+  const form = document.querySelector<HTMLFormElement>('#contact-form');
+  const status = form?.querySelector<HTMLParagraphElement>('[role="status"]');
+  const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+  function showStatus(kind: 'success' | 'error', text: string) {
+    if (!status) return;
+    status.textContent = text;
+    status.className = `alert alert-${kind}`;
+    status.hidden = false;
+  }
+
+  function clearErrors() {
+    if (status) status.hidden = true;
+    form?.querySelectorAll<HTMLElement>('[data-error-for]').forEach((el) => {
+      el.hidden = true;
+      document.getElementById(el.dataset.errorFor!)?.removeAttribute('aria-invalid');
+    });
+  }
+
+  function showFieldErrors(errors: Record<string, string>) {
+    for (const [field, text] of Object.entries(errors)) {
+      const el = form?.querySelector<HTMLElement>(`[data-error-for="${field}"]`);
+      if (el) {
+        el.textContent = text;
+        el.hidden = false;
+        document.getElementById(field)?.setAttribute('aria-invalid', 'true');
+      } else {
+        showStatus('error', text); // form-level error, e.g. rate limit
+      }
+    }
+  }
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearErrors();
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Sending…';
+    }
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      });
+      const data = (await res.json()) as ContactResponse;
+
+      if (data.ok) {
+        form.reset();
+        showStatus('success', data.message ?? 'Thanks! Your message has been sent.');
+      } else {
+        showFieldErrors(data.errors ?? { form: 'Something went wrong. Please try again.' });
+      }
+    } catch {
+      showStatus('error', "Couldn't send right now — please email me directly instead.");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Send message';
+      }
+    }
+  });
+</script>

@@ -1,0 +1,49 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import { site, initials } from '../config/site';
+
+const links = [
+  { href: '/#about', label: 'About' },
+  { href: '/#projects', label: 'Projects' },
+  { href: '/#toolkit', label: 'Toolkit' },
+  { href: '/#contact', label: 'Contact' },
+];
+---
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="/" aria-label={`${site.shortName} — home`}>{initials}<span>.</span></a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">
+      <span class="sr-only">Menu</span><span class="bars" aria-hidden="true"></span>
+    </button>
+
+    <nav id="nav-links" class="nav-links" aria-label="Main">
+      {links.map((link) => <a href={link.href}>{link.label}</a>)}
+      {site.cv && (
+        <a class="btn btn-small" href={site.cv} target="_blank" rel="noopener">CV</a>
+      )}
+    </nav>
+
+    <ThemeToggle />
+  </div>
+</header>
+
+<script>
+  // Mobile menu open/close
+  const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle');
+  const links = document.getElementById('nav-links');
+
+  function setOpen(open: boolean) {
+    toggle?.setAttribute('aria-expanded', String(open));
+    links?.classList.toggle('open', open);
+  }
+
+  toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  links?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('a')) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
+  });
+</script>

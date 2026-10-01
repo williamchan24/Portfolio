@@ -1,0 +1,39 @@
+---
+/**
+ * ASTRO 101 — how a .astro file works:
+ * 1. The part between the --- fences is the "component script". It's TypeScript that runs
+ *    at BUILD time (on your computer), never in the visitor's browser.
+ * 2. Everything below the fences is the template: HTML + {expressions}.
+ * 3. <slot /> is where the page's content gets inserted.
+ */
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!--
+      is:inline = ship this script exactly as written, straight into the HTML.
+      It must run before the page paints so dark-mode users don't see a white flash.
+    -->
+    <script is:inline>
+      try {
+        const t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

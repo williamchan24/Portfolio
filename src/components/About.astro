@@ -1,0 +1,36 @@
+---
+import { site, initials } from '../config/site';
+
+// Object.entries turns { Currently: '...', ... } into [['Currently', '...'], ...]
+const facts = Object.entries(site.facts).filter(([, value]) => value !== '');
+---
+
+<section id="about" class="section">
+  <div class="container about">
+    <div class="about-photo">
+      {site.photo
+        ? <img src={site.photo} alt={`Portrait of ${site.shortName}`} width="320" height="320" />
+        : <div class="avatar" aria-hidden="true">{initials}</div>}
+    </div>
+
+    <div>
+      <h2 class="section-title">About me</h2>
+      {site.about.map((paragraph) => <p>{paragraph}</p>)}
+
+      <dl class="facts">
+        {facts.map(([label, value]) => (
+          <div><dt>{label}</dt><dd>{value}</dd></div>
+        ))}
+      </dl>
+
+      {site.interests.length > 0 && (
+        <>
+          <h3 class="subhead">Things I'm into</h3>
+          <ul class="tags">
+            {site.interests.map((item) => <li>{item}</li>)}
+          </ul>
+        </>
+      )}
+    </div>
+  </div>
+</section>

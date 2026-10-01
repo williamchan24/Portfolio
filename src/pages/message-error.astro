@@ -1,0 +1,10 @@
+---
+// Shown if the contact form fails with JavaScript turned off.
+import MessagePage from '../components/MessagePage.astro';
+import { site } from '../config/site';
+---
+
+<MessagePage title={`Message not sent · ${site.shortName}`} heading="Hmm, that didn't send">
+  <p>Please check your name, email and message (at least 10 characters) and try again — or email me at <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+  <a class="btn" href="/#contact">Try again</a>
+</MessagePage>

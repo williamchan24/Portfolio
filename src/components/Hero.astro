@@ -1,0 +1,22 @@
+---
+import { site, firstName, activeSocials } from '../config/site';
+---
+
+<section class="hero">
+  <div class="container">
+    <h1>Hi, I'm {firstName}.<br /><span class="accent">{site.headline}</span></h1>
+    <p class="lead">{site.tagline}</p>
+
+    <div class="actions">
+      <a class="btn" href="#projects">See what I've made</a>
+      <a class="btn btn-ghost" href="#contact">Say hi</a>
+    </div>
+
+    <ul class="socials" aria-label="Elsewhere">
+      {activeSocials.map(([label, url]) => (
+        <li><a href={url} target="_blank" rel="noopener me">{label}</a></li>
+      ))}
+      <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+    </ul>
+  </div>
+</section>
