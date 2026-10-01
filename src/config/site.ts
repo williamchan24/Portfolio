@@ -26,7 +26,7 @@ export const site: SiteConfig = {
   shortName: 'William Chan',
   headline: 'I build things for the web.',
   tagline:
-    "I'm a developer and Swinburne Computer Science grad. This is my little corner of the internet — what I'm working on, what I've made, and what I'm into.", // TODO
+    "Developer and Swinburne CS grad. Here's what I've been making.", // TODO
 
   photo: null, // TODO: drop a photo in /public and put its path here, e.g. '/me.jpg'
   about: [
