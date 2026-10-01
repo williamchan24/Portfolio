@@ -1,0 +1,129 @@
+---
+/**
+ * Scroll effects for the whole page. Drop <ScrollEffects /> once into a page.
+ *  1. Reveal ("blur in"): sections, cards and facts go from blurry to sharp as you scroll to them
+ *     (cards in the same grid come in one after another).
+ *  2. Progress bar: a thin accent line at the top that fills as you scroll.
+ *  3. Hero drift: the hero gently fades and drifts up as you scroll past it.
+ * Turned off automatically for people who prefer reduced motion.
+ */
+---
+
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduceMotion) {
+    // ---------- 1. Reveal on scroll ----------
+    // Which elements get the effect (no need to edit the other components).
+    const SELECTORS = [
+      '.section-title',
+      '.about-photo',
+      '.about p',
+      '.facts > div',
+      '.subhead',
+      '.project-grid > *',
+      '.skills-grid > *',
+      '.contact > *',
+    ].join(',');
+
+    const targets = [...document.querySelectorAll<HTMLElement>(SELECTORS)].filter(
+      // only hide things that start below the screen, so nothing visible "blinks" on load
+      (el) => el.getBoundingClientRect().top > window.innerHeight * 0.9,
+    );
+
+    // Stagger items that share the same parent (e.g. project cards in one row)
+    const siblingCount = new Map<Element, number>();
+    for (const el of targets) {
+      const parent = el.parentElement!;
+      const n = siblingCount.get(parent) ?? 0;
+      siblingCount.set(parent, n + 1);
+      el.style.setProperty("--reveal-delay", `${Math.min(n, 6) * 100}ms`);
+      el.classList.add('reveal');
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target); // animate once
+          }
+        }
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
+    );
+    targets.forEach((el) => observer.observe(el));
+
+    // ---------- 2 + 3. Progress bar + hero drift (one rAF loop, cheap) ----------
+    const bar = document.querySelector<HTMLElement>('.scroll-progress');
+    const hero = document.querySelector<HTMLElement>('.hero .container');
+    let ticking = false;
+
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const y = window.scrollY;
+      if (bar) bar.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
+      if (hero) {
+        const p = Math.min(y / (window.innerHeight * 0.8), 1); // 0 → 1 over ~80% of a screen
+        hero.style.transform = `translateY(${p * -60}px)`;
+        hero.style.opacity = String(1 - p * 0.85);
+      }
+      ticking = false;
+    };
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+    update();
+  }
+</script>
+
+<style is:global>
+  /* Reveal: hidden state is only applied by the script, so the page still works without JS */
+  /* "Blur in": no movement, just goes from blurry + transparent to sharp */
+  .reveal {
+    opacity: 0;
+    filter: blur(14px);
+    transition:
+      opacity 750ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      filter 750ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal.is-revealed {
+    opacity: 1;
+    filter: none;
+  }
+
+  /* Thin progress line under the sticky header */
+  .scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 100;
+    background: linear-gradient(90deg, var(--accent), #ec4899);
+    transform: scaleX(0);
+    transform-origin: left;
+    pointer-events: none;
+  }
+
+  .hero .container {
+    will-change: transform, opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-progress {
+      display: none;
+    }
+  }
+</style>
