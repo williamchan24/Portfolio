@@ -1,0 +1,86 @@
+---
+/**
+ * Scramble greeting: random characters "decode" into each greeting, left to right,
+ * hold for a moment, then the next language scrambles in.
+ */
+interface Props {
+  words?: string[];
+}
+const {
+  words = ['Hello there.', 'Hai.', '你好.', 'Vanakkam.', 'Bonjour.', 'Hola.', '안녕.', 'こんにちは.'],
+} = Astro.props;
+---
+
+<p class="greeting" data-words={JSON.stringify(words)} aria-hidden="true">{words[0]}</p>
+
+<script>
+  const el = document.querySelector<HTMLElement>('.greeting');
+
+  if (el) {
+    const words: string[] = JSON.parse(el.dataset.words ?? '[]');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const GLYPHS = 'abcdefghijklmnopqrstuvwxyz0123456789!?#&*%';
+    const FRAMES = 22; // how many scramble steps per word
+    const FRAME_MS = 40; // speed of each step (ms)
+    const HOLD_MS = 2400; // how long the finished word stays (ms)
+
+    const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+
+    // Draw one frame: the first `done` letters are real, the rest are random glyphs.
+    function draw(target: string[], done: number) {
+      el!.replaceChildren(
+        ...target.map((ch, k) => {
+          if (k < done || ch === ' ') return document.createTextNode(ch);
+          const span = document.createElement('span');
+          span.className = 'glyph';
+          span.textContent = randomGlyph();
+          return span;
+        }),
+      );
+    }
+
+    function scramble(word: string, onDone: () => void) {
+      const target = [...word]; // [...] splits emoji / Chinese / Korean characters correctly
+      let frame = 0;
+      const tick = () => {
+        draw(target, Math.floor((frame / FRAMES) * target.length));
+        if (frame++ < FRAMES) setTimeout(tick, FRAME_MS);
+        else {
+          el!.textContent = word;
+          onDone();
+        }
+      };
+      tick();
+    }
+
+    if (!reduceMotion && words.length > 1) {
+      let i = 0;
+      const next = () => {
+        scramble(words[i], () => setTimeout(next, HOLD_MS));
+        i = (i + 1) % words.length;
+      };
+      next();
+    }
+  }
+</script>
+
+<style>
+  .greeting {
+    margin: 0 0 0.15em;
+    min-height: 1.05em;
+    max-width: 100%;
+    overflow: hidden; /* scrambling letters can be wider than the real word, so never let them push the page sideways */
+    font-size: clamp(2.5rem, 11vw, 8rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    white-space: nowrap;
+  }
+
+  /* the random characters while it's decoding (global so the script's spans get it) */
+  .greeting :global(.glyph) {
+    color: var(--accent);
+    opacity: 0.7;
+  }
+</style>
