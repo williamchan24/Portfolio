@@ -30,8 +30,8 @@ export const site: SiteConfig = {
 
   photo: null, // TODO: drop a photo in /public and put its path here, e.g. '/me.jpg'
   about: [
-    "Hey! I'm William. I like building things that are clean, fast and actually useful — from small side projects to full web apps, front end to back end.", // TODO
-    'Most of what I make starts as "wouldn\'t it be cool if…". Here\'s where I keep track of it all.', // TODO
+    "I'm William. I like building things, experimenting with new tech, and turning random ideas into something that actually works.", // TODO
+    'Most of my projects start with a simple “wouldn’t it be cool if…” — this is where I keep track of what I’m building, learning, and messing around with.', // TODO
   ],
   facts: {
     Currently: 'Building side projects & learning Astro', // TODO
