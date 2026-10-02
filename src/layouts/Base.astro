@@ -15,7 +15,8 @@ const { title } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<!-- Dark by default; the script below switches to light only if the visitor picked it. -->
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,7 +25,7 @@ const { title } = Astro.props;
 
     <!--
       is:inline = ship this script exactly as written, straight into the HTML.
-      It must run before the page paints so dark-mode users don't see a white flash.
+      It must run before the page paints so light-mode users don't see a dark flash.
     -->
     <script is:inline>
       try {
