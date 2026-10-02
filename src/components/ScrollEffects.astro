@@ -2,7 +2,7 @@
 /**
  * Scroll effects for the whole page. Drop <ScrollEffects /> once into a page.
  *  1. Reveal ("blur in"): sections, cards and facts go from blurry to sharp as you scroll to them
- *     (cards in the same grid come in one after another).
+ *     (cards in the same grid come in one after another). Repeats every time you scroll back.
  *  2. Progress bar: a thin accent line at the top that fills as you scroll.
  *  3. Hero drift: the hero gently fades and drifts up as you scroll past it.
  * Turned off automatically for people who prefer reduced motion.
@@ -28,10 +28,7 @@
       '.contact > *',
     ].join(',');
 
-    const targets = [...document.querySelectorAll<HTMLElement>(SELECTORS)].filter(
-      // only hide things that start below the screen, so nothing visible "blinks" on load
-      (el) => el.getBoundingClientRect().top > window.innerHeight * 0.9,
-    );
+    const targets = [...document.querySelectorAll<HTMLElement>(SELECTORS)];
 
     // Stagger items that share the same parent (e.g. project cards in one row)
     const siblingCount = new Map<Element, number>();
@@ -39,17 +36,19 @@
       const parent = el.parentElement!;
       const n = siblingCount.get(parent) ?? 0;
       siblingCount.set(parent, n + 1);
-      el.style.setProperty("--reveal-delay", `${Math.min(n, 6) * 100}ms`);
+      el.style.setProperty('--reveal-delay', `${Math.min(n, 6) * 100}ms`);
+      // Anything already on screen at load starts revealed, so nothing "blinks" on first paint
+      const onScreen = el.getBoundingClientRect().top < window.innerHeight * 0.9;
       el.classList.add('reveal');
+      if (onScreen) el.classList.add('is-revealed');
     }
 
+    // Repeats every time: blur in when an element scrolls into view,
+    // blur back out once it has left the screen (so it can animate again next time).
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-revealed');
-            observer.unobserve(entry.target); // animate once
-          }
+          entry.target.classList.toggle('is-revealed', entry.isIntersecting);
         }
       },
       { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
@@ -96,11 +95,11 @@
     transition:
       opacity 750ms cubic-bezier(0.2, 0.7, 0.2, 1),
       filter 750ms cubic-bezier(0.2, 0.7, 0.2, 1);
-    transition-delay: var(--reveal-delay, 0ms);
   }
   .reveal.is-revealed {
     opacity: 1;
     filter: none;
+    transition-delay: var(--reveal-delay, 0ms); /* stagger only when coming in, not when leaving */
   }
 
   /* Thin progress line under the sticky header */
