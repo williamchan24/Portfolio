@@ -1,0 +1,94 @@
+---
+/**
+ * Cursor spotlight: a soft glow follows the mouse across the page, and every .card
+ * gets a glowing edge on the side nearest the cursor. Mouse/trackpad only — it's
+ * switched off on touch screens and for people who prefer reduced motion.
+ */
+---
+
+<div class="spotlight" aria-hidden="true"></div>
+
+<script>
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const spot = document.querySelector<HTMLElement>('.spotlight');
+
+  if (spot && fine && !reduceMotion) {
+    document.documentElement.classList.add('has-spotlight');
+    const cards = document.querySelectorAll<HTMLElement>('.card');
+    let x = 0;
+    let y = 0;
+    let queued = false;
+
+    // Only update once per animation frame, however fast the mouse moves
+    const paint = () => {
+      spot.style.setProperty('--x', `${x}px`);
+      spot.style.setProperty('--y', `${y}px`);
+      cards.forEach((card) => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--cx', `${x - r.left}px`);
+        card.style.setProperty('--cy', `${y - r.top}px`);
+      });
+      queued = false;
+    };
+
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        x = e.clientX;
+        y = e.clientY;
+        spot.classList.add('is-on');
+        if (!queued) {
+          queued = true;
+          requestAnimationFrame(paint);
+        }
+      },
+      { passive: true },
+    );
+    document.documentElement.addEventListener('pointerleave', () => spot.classList.remove('is-on'));
+  }
+</script>
+
+<style is:global>
+  /* Glow layer sits above section backgrounds but below the content */
+  .spotlight {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    background: radial-gradient(
+      600px circle at var(--x, 50%) var(--y, 50%),
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 45%
+    );
+  }
+  .spotlight.is-on {
+    opacity: 1;
+  }
+  .has-spotlight .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Card edge glow (a 1px gradient border revealed near the cursor) */
+  .has-spotlight .card {
+    position: relative;
+  }
+  .has-spotlight .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: radial-gradient(300px circle at var(--cx, -999px) var(--cy, -999px), var(--accent), transparent 60%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+</style>

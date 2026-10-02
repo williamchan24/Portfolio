@@ -1,0 +1,63 @@
+---
+/**
+ * "It's 3:42 pm in Kuala Lumpur" — live local time with a little green dot.
+ * Change the city/timezone via props: <LocalTime city="Melbourne" timeZone="Australia/Melbourne" />
+ * Timezone names: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+ */
+interface Props {
+  city?: string;
+  timeZone?: string;
+}
+const { city = 'Kuala Lumpur', timeZone = 'Asia/Kuala_Lumpur' } = Astro.props;
+---
+
+<p class="local-time" data-city={city} data-tz={timeZone}>
+  <span class="dot" aria-hidden="true"></span>
+  <span class="text">{city}</span>
+</p>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.local-time').forEach((el) => {
+    const text = el.querySelector('.text')!;
+    const fmt = new Intl.DateTimeFormat('en-MY', {
+      timeZone: el.dataset.tz,
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    const tick = () => {
+      text.textContent = `It's ${fmt.format(new Date()).toLowerCase()} in ${el.dataset.city}`;
+    };
+    tick();
+    setInterval(tick, 15_000); // every 15s is plenty for a minute-level clock
+  });
+</script>
+
+<style>
+  .local-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 14px 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 4px rgb(34 197 94 / 0.2);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% {
+      box-shadow: 0 0 0 7px rgb(34 197 94 / 0.05);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot {
+      animation: none;
+    }
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import Greeting from './Greeting.astro';
+import LocalTime from './LocalTime.astro';
 import { site, firstName } from '../config/site';
 ---
 
@@ -8,6 +9,7 @@ import { site, firstName } from '../config/site';
     <Greeting />
     <h1><strong>I'm {firstName}</strong> — {site.headline}</h1>
     <p class="lead">{site.tagline}</p>
+    <LocalTime />
 
     <div class="actions">
       <a class="btn" href="#projects">See my projects</a>
