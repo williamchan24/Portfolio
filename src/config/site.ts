@@ -50,7 +50,6 @@ export const site: SiteConfig = {
   socials: {
     GitHub: 'https://github.com/williamchan24', // TODO
     LinkedIn: 'https://www.linkedin.com/in/william-chan-wing-hong/', // TODO
-    Strava: 'https://www.strava.com/athletes/185667676', // TODO — empty hides it
   },
 
   cv: null, // e.g. '/William-Chan-CV.pdf' (put the PDF in /public)
