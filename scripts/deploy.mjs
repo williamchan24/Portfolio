@@ -3,8 +3,11 @@
 import { Client } from 'basic-ftp';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 const { FTP_HOST, FTP_USER, FTP_PASSWORD, FTP_DIR = '/www' } = process.env;
+const ROOT = FTP_DIR.replace(/\/+$/, '');
+const MAX_TRIES = 5;
 
 if (!FTP_HOST || !FTP_USER || !FTP_PASSWORD) {
   console.error('Missing FTP_HOST, FTP_USER or FTP_PASSWORD. Copy .env.example to .env and fill it in.');
@@ -14,26 +17,16 @@ if (!existsSync('dist')) {
   console.error('No dist/ folder found. Run the build first.');
   process.exit(1);
 }
-
-// Uploads localDir into the server's current folder, printing each file once.
-async function uploadDir(client, localDir, remotePath = '') {
-  for (const entry of readdirSync(localDir, { withFileTypes: true })) {
-    const localPath = join(localDir, entry.name);
-    const shown = `${remotePath}/${entry.name}`;
-    if (entry.isDirectory()) {
-      await client.ensureDir(entry.name); // creates it and changes into it
-      await uploadDir(client, localPath, shown);
-      await client.cdup();
-    } else {
-      await client.uploadFrom(localPath, entry.name);
-      console.log(`  ${shown}`);
-    }
-  }
+if (ROOT === '') {
+  console.error('Refusing to wipe the server root. Set FTP_DIR.');
+  process.exit(1);
 }
 
-const client = new Client();
-try {
-  if (FTP_DIR.replace(/\/+$/, '') === '') throw new Error('Refusing to wipe the server root. Set FTP_DIR.');
+let client = new Client();
+
+async function connect() {
+  client.close();
+  client = new Client();
   await client.access({
     host: FTP_HOST,
     user: FTP_USER,
@@ -42,12 +35,49 @@ try {
     // The server uses a self-signed certificate, so skip the CA check (still encrypted).
     secureOptions: { rejectUnauthorized: process.env.FTP_ALLOW_SELF_SIGNED !== 'true' },
   });
+}
+
+// The server sometimes refuses data connections when they come too fast
+// ("425 Cannot prepare for data connection"). On any error, wait, reconnect and try again.
+async function withRetry(label, fn) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt >= MAX_TRIES) throw new Error(`${label}: ${err.message}`);
+      const wait = attempt * 3;
+      console.log(`  ! ${label} failed (${err.message}) — retrying in ${wait}s (${attempt}/${MAX_TRIES - 1})`);
+      await sleep(wait * 1000);
+      await connect().catch(() => {}); // if this fails, the next attempt will fail and retry again
+    }
+  }
+}
+
+// Uploads localDir to remoteDir (absolute paths, so a reconnect can't lose our place).
+async function uploadDir(localDir, remoteDir) {
+  await withRetry(`create ${remoteDir}`, () => client.ensureDir(remoteDir));
+  for (const entry of readdirSync(localDir, { withFileTypes: true })) {
+    const localPath = join(localDir, entry.name);
+    const remotePath = `${remoteDir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      await uploadDir(localPath, remotePath);
+    } else {
+      await withRetry(`upload ${remotePath}`, () => client.uploadFrom(localPath, remotePath));
+      console.log(`  ${remotePath.slice(ROOT.length)}`);
+    }
+  }
+}
+
+try {
+  await withRetry('connect', connect);
   console.log(`Connected to ${FTP_HOST}.`);
-  await client.ensureDir(FTP_DIR); // also changes into it
-  console.log(`Deleting everything in ${FTP_DIR} ...`);
-  await client.clearWorkingDir();
-  console.log(`Uploading dist/ to ${FTP_DIR} ...`);
-  await uploadDir(client, 'dist');
+  console.log(`Deleting everything in ${ROOT} ...`);
+  await withRetry(`clear ${ROOT}`, async () => {
+    await client.ensureDir(ROOT); // also changes into it
+    await client.clearWorkingDir();
+  });
+  console.log(`Uploading dist/ to ${ROOT} ...`);
+  await uploadDir('dist', ROOT);
   console.log('Done.');
 } catch (err) {
   console.error('Upload failed:', err.message);
