@@ -59,7 +59,8 @@ If you get a field wrong (e.g. `live: not-a-url`), `npm run build` tells you exa
 
 1. Run `npm run build`.
 2. **First time only:** upload the `private/` folder to your home folder, *next to* `public_html` (not inside it).
-   - In `private/`, copy `config.example.php` to `config.php` and set `notify_email`.
+   - In `private/`, copy `config.example.php` to `config.php` and fill in `resend_api_key` and `notify_email`.
+     The contact form emails you through [Resend](https://resend.com); `npm run push` uploads `config.php` for you.
    - Set `private/storage` permissions to **750**.
 3. Upload **everything inside `dist/`** into `public_html/`, replacing the old files.
    - `.htaccess` is a hidden file. In File Manager, turn on **Settings → Show Hidden Files**.

@@ -1,12 +1,15 @@
 // Wipes FTP_DIR on the server, then uploads everything inside dist/ (explicit FTPS).
+// Also uploads private/config.php (if you have one) to FTP_PRIVATE_DIR, which is never wiped.
 // Settings come from .env (never committed) — see .env.example.
 import { Client } from 'basic-ftp';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-const { FTP_HOST, FTP_USER, FTP_PASSWORD, FTP_DIR = '/www' } = process.env;
+const { FTP_HOST, FTP_USER, FTP_PASSWORD, FTP_DIR = '/www', FTP_PRIVATE_DIR = '/private' } = process.env;
 const ROOT = FTP_DIR.replace(/\/+$/, '');
+const PRIVATE_ROOT = FTP_PRIVATE_DIR.replace(/\/+$/, '');
+const PRIVATE_CONFIG = 'private/config.php';
 const MAX_TRIES = 5;
 
 if (!FTP_HOST || !FTP_USER || !FTP_PASSWORD) {
@@ -78,6 +81,16 @@ try {
   });
   console.log(`Uploading dist/ to ${ROOT} ...`);
   await uploadDir('dist', ROOT);
+
+  if (existsSync(PRIVATE_CONFIG)) {
+    console.log(`Uploading ${PRIVATE_CONFIG} to ${PRIVATE_ROOT} ...`);
+    await withRetry(`create ${PRIVATE_ROOT}`, () => client.ensureDir(PRIVATE_ROOT));
+    await withRetry(`upload ${PRIVATE_ROOT}/config.php`, () =>
+      client.uploadFrom(PRIVATE_CONFIG, `${PRIVATE_ROOT}/config.php`),
+    );
+  } else {
+    console.log(`No ${PRIVATE_CONFIG} found — skipping (the contact form won't email you without it).`);
+  }
   console.log('Done.');
 } catch (err) {
   console.error('Upload failed:', err.message);
