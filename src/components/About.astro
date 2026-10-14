@@ -14,7 +14,7 @@ const facts = Object.entries(site.facts).filter(([, value]) => value !== '');
     </div>
 
     <div>
-      <h2 class="section-title">About me</h2>
+      <h2 class="section-title" data-label="ABOUT">About me</h2>
       {site.about.map((paragraph) => <p>{paragraph}</p>)}
 
       <dl class="facts">

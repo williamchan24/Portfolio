@@ -1,0 +1,100 @@
+---
+/**
+ * Two rows of giant text sliding in opposite directions, built from your toolkit in site.ts.
+ * Each row is the list twice, side by side, so sliding by exactly -50% loops seamlessly.
+ * Scrolling the page speeds it up a little (see the script).
+ */
+import { site } from '../config/site';
+
+const items = Object.values(site.toolkit).flat();
+const rows = [items, [...items].reverse()];
+---
+
+<section class="marquee" aria-label="Tools I use">
+  {rows.map((row, r) => (
+    <div class={`marquee-row ${r % 2 ? 'is-reverse' : ''}`} aria-hidden={r > 0 ? 'true' : undefined}>
+      <div class="marquee-track">
+        {[0, 1].map((copy) => (
+          <ul aria-hidden={copy > 0 || r > 0 ? 'true' : undefined}>
+            {row.map((item, i) => (
+              <li class={i % 2 ? 'is-outline' : ''}>{item}<span class="star" aria-hidden="true">✦</span></li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    </div>
+  ))}
+</section>
+
+<script>
+  // Nudge the marquee speed with scroll velocity, then ease back to normal.
+  const tracks = document.querySelectorAll<HTMLElement>('.marquee-track');
+  if (tracks.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let lastY = window.scrollY;
+    let boost = 0;
+    const loop = () => {
+      const y = window.scrollY;
+      boost = Math.min(boost * 0.92 + Math.abs(y - lastY) * 0.02, 4);
+      lastY = y;
+      tracks.forEach((t) => t.getAnimations().forEach((a) => (a.playbackRate = 1 + boost)));
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+</script>
+
+<style>
+  .marquee {
+    padding: 28px 0;
+    overflow: hidden;
+    border-block: 1px solid var(--border);
+    background: var(--bg);
+    position: relative;
+    z-index: 1;
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+  .marquee-row + .marquee-row {
+    margin-top: 6px;
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: slide 40s linear infinite;
+  }
+  .is-reverse .marquee-track {
+    animation-direction: reverse;
+    animation-duration: 48s;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+  li {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+  .is-outline {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--muted);
+  }
+  .star {
+    font-size: 0.45em;
+    margin: 0 0.9em;
+    color: var(--accent);
+    -webkit-text-stroke: 0;
+  }
+  @keyframes slide {
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track { animation: none; }
+  }
+</style>

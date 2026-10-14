@@ -1,0 +1,191 @@
+---
+/**
+ * Custom cursor: a dot that sticks to the mouse and a ring that trails behind it.
+ * - Over links/buttons the ring grows.
+ * - Over anything with data-cursor="Text" the ring becomes a bubble showing that text.
+ * - Anything with class="magnetic" gets pulled a little toward the mouse.
+ * Mouse/trackpad only; touch screens and reduced-motion users keep the normal cursor.
+ */
+---
+
+<div class="cursor" aria-hidden="true">
+  <div class="cursor-ring"><span class="cursor-label"></span></div>
+  <div class="cursor-dot"></div>
+</div>
+
+<script>
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cursor = document.querySelector<HTMLElement>('.cursor');
+
+  if (cursor && fine && !reduceMotion) {
+    document.documentElement.classList.add('has-cursor');
+    const ring = cursor.querySelector<HTMLElement>('.cursor-ring')!;
+    const dot = cursor.querySelector<HTMLElement>('.cursor-dot')!;
+    const label = cursor.querySelector<HTMLElement>('.cursor-label')!;
+
+    let mx = -100;
+    let my = -100;
+    let rx = mx;
+    let ry = my;
+
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        mx = e.clientX;
+        my = e.clientY;
+        cursor.classList.add('is-visible');
+      },
+      { passive: true },
+    );
+    document.documentElement.addEventListener('pointerleave', () => cursor.classList.remove('is-visible'));
+    window.addEventListener('pointerdown', () => cursor.classList.add('is-down'));
+    window.addEventListener('pointerup', () => cursor.classList.remove('is-down'));
+
+    // The ring eases toward the mouse every frame (lerp = "move 18% of the way there")
+    const loop = () => {
+      rx += (mx - rx) * 0.18;
+      ry += (my - ry) * 0.18;
+      dot.style.transform = `translate(${mx}px, ${my}px)`;
+      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+
+    // Hover states, via event delegation so it works for every element on the page
+    document.addEventListener('pointerover', (e) => {
+      const target = e.target as HTMLElement;
+      const labelled = target.closest<HTMLElement>('[data-cursor]');
+      const interactive = target.closest('a, button, label, input, textarea, [role="button"]');
+      cursor.classList.toggle('is-label', !!labelled);
+      cursor.classList.toggle('is-hover', !labelled && !!interactive);
+      cursor.classList.toggle('is-text', !!target.closest('input, textarea'));
+      if (labelled) label.textContent = labelled.dataset.cursor ?? '';
+    });
+
+    // Magnetic elements
+    document.querySelectorAll<HTMLElement>('.magnetic').forEach((el) => {
+      el.addEventListener('pointermove', (e) => {
+        const r = el.getBoundingClientRect();
+        const x = e.clientX - (r.left + r.width / 2);
+        const y = e.clientY - (r.top + r.height / 2);
+        el.style.transform = `translate(${x * 0.25}px, ${y * 0.35}px)`;
+      });
+      el.addEventListener('pointerleave', () => {
+        el.style.transform = '';
+      });
+    });
+  }
+</script>
+
+<style is:global>
+  .cursor {
+    display: none;
+  }
+  .has-cursor .cursor {
+    display: block;
+  }
+  .has-cursor,
+  .has-cursor a,
+  .has-cursor button,
+  .has-cursor label {
+    cursor: none;
+  }
+  .has-cursor input,
+  .has-cursor textarea {
+    cursor: text;
+  }
+
+  .cursor-dot,
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+    pointer-events: none;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .cursor.is-visible .cursor-dot,
+  .cursor.is-visible .cursor-ring {
+    opacity: 1;
+  }
+  .cursor-dot {
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    background: #fff;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    display: grid;
+    place-items: center;
+    mix-blend-mode: difference;
+  }
+  /* The visible circle is a pseudo-element so it can scale without moving the ring */
+  .cursor-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid #fff;
+    transition:
+      transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background 0.35s,
+      border-color 0.35s;
+  }
+  .cursor.is-hover .cursor-ring::before {
+    transform: scale(1.8);
+    background: #fff;
+  }
+  .cursor.is-down .cursor-ring::before {
+    transform: scale(0.8);
+  }
+  .cursor.is-text .cursor-ring,
+  .cursor.is-text .cursor-dot {
+    opacity: 0;
+  }
+
+  /* Label bubble ("Open ↗") — not blended, so it stays readable */
+  .cursor.is-label .cursor-ring {
+    mix-blend-mode: normal;
+  }
+  .cursor.is-label .cursor-ring::before {
+    transform: scale(2.6);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .cursor.is-label .cursor-dot {
+    opacity: 0;
+  }
+  .cursor-label {
+    position: relative;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--on-accent);
+    opacity: 0;
+    transform: scale(0.6);
+    transition:
+      opacity 0.25s,
+      transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .cursor.is-label .cursor-label {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Magnetic elements spring back smoothly */
+  .magnetic {
+    transition:
+      transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+</style>

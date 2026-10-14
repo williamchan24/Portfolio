@@ -1,0 +1,132 @@
+---
+/**
+ * Intro screen: your name + a 0 → 100 counter, then the whole thing wipes up off the page.
+ * Shown once per browser tab session (not on every reload), and skipped entirely for
+ * reduced-motion users. Without JavaScript it never appears, so nothing can get stuck.
+ */
+import { site } from '../config/site';
+---
+
+<!-- Runs immediately (before paint) to decide whether to show the intro at all -->
+<script is:inline>
+  (function () {
+    var seen = false;
+    try { seen = sessionStorage.getItem('intro-seen') === '1'; } catch (e) {}
+    if (seen || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var root = document.documentElement;
+    root.classList.add('is-loading');
+    // Safety net: never block the page for more than 4s, whatever happens
+    setTimeout(function () { root.classList.remove('is-loading'); }, 4000);
+  })();
+</script>
+
+<div class="preloader" aria-hidden="true">
+  <p class="preloader-name">
+    {site.shortName.split('').map((ch, i) => (
+      <span style={`--i:${i}`}>{ch === ' ' ? ' ' : ch}</span>
+    ))}
+  </p>
+  <p class="preloader-count"><span>0</span>%</p>
+  <div class="preloader-bar"><i></i></div>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const loader = document.querySelector<HTMLElement>('.preloader');
+
+  if (loader && root.classList.contains('is-loading')) {
+    const count = loader.querySelector<HTMLElement>('.preloader-count span')!;
+    const bar = loader.querySelector<HTMLElement>('.preloader-bar i')!;
+    const DURATION = 1800;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / DURATION, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // ease-out: fast start, slow finish
+      count.textContent = String(Math.round(eased * 100));
+      bar.style.transform = `scaleX(${eased})`;
+      if (t < 1) requestAnimationFrame(tick);
+      else {
+        root.classList.add('is-loaded');
+        try {
+          sessionStorage.setItem('intro-seen', '1');
+        } catch {
+          /* storage blocked — they'll just see the intro again */
+        }
+        setTimeout(() => root.classList.remove('is-loading', 'is-loaded'), 1100);
+      }
+    };
+    requestAnimationFrame(tick);
+  }
+</script>
+
+<style is:global>
+  .preloader {
+    display: none;
+  }
+  .is-loading .preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    background: #05050a;
+    color: #f4f4f5;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 1s cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  .is-loading {
+    overflow: hidden;
+  }
+  .is-loaded .preloader {
+    clip-path: inset(0 0 100% 0);
+  }
+
+  .preloader-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 8vw, 6rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    overflow: hidden;
+    display: flex;
+  }
+  .preloader-name span {
+    display: inline-block;
+    transform: translateY(110%);
+    animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: calc(var(--i) * 25ms);
+  }
+  .is-loaded .preloader-name span {
+    animation: none;
+    transform: translateY(-110%);
+    transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  @keyframes rise {
+    to { transform: none; }
+  }
+
+  .preloader-count {
+    position: absolute;
+    right: 24px;
+    bottom: 20px;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: #a1a1aa;
+  }
+  .preloader-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+  }
+  .preloader-bar i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #818cf8, #ec4899);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+</style>

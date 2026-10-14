@@ -6,3 +6,4 @@ private/storage/*
 !private/storage/.gitkeep
 .DS_Store
 .env
+.claude/

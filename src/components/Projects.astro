@@ -10,14 +10,43 @@ const projects = (await getCollection('projects', ({ data }) => !data.draft)).so
 
 <section id="projects" class="section section-alt">
   <div class="container">
-    <h2 class="section-title">Things I've built</h2>
+    <div class="section-head">
+      <h2 class="section-title" data-label="WORK">Things I've built</h2>
+      <p class="muted">Selected work — hover a screenshot, then click to try it live.</p>
+    </div>
 
     {projects.length === 0
       ? <p class="muted">Projects are on their way — check back soon.</p>
       : (
-        <div class="project-grid">
-          {projects.map((project) => <ProjectCard project={project} />)}
+        <div class="showcase-list">
+          {projects.map((project, i) => <ProjectCard project={project} index={i + 1} />)}
         </div>
       )}
   </div>
 </section>
+
+<script>
+  // 3D tilt + moving glare on each project screenshot (mouse/trackpad only).
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (fine && !reduceMotion) {
+    document.querySelectorAll<HTMLElement>('.showcase-media').forEach((media) => {
+      media.addEventListener('pointermove', (e) => {
+        const r = media.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width; // 0 → 1 across
+        const py = (e.clientY - r.top) / r.height; // 0 → 1 down
+        media.style.setProperty('--rx', `${(0.5 - py) * 10}deg`);
+        media.style.setProperty('--ry', `${(px - 0.5) * 14}deg`);
+        media.style.setProperty('--gx', `${px * 100}%`);
+        media.style.setProperty('--gy', `${py * 100}%`);
+        media.classList.add('is-tilting');
+      });
+      media.addEventListener('pointerleave', () => {
+        media.classList.remove('is-tilting');
+        media.style.setProperty('--rx', '0deg');
+        media.style.setProperty('--ry', '0deg');
+      });
+    });
+  }
+</script>

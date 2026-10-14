@@ -1,37 +1,158 @@
 ---
+/**
+ * Full-screen hero: a looping AI-rendered video behind the scramble greeting.
+ * The video lives in /public/hero.mp4; the poster (shown while it loads, and to people
+ * who prefer reduced motion) is optimised by Astro from src/assets/hero-poster.png.
+ * The hero is always dark, whichever theme is picked, so the video reads the same.
+ */
+import { getImage } from 'astro:assets';
 import Greeting from './Greeting.astro';
 import LocalTime from './LocalTime.astro';
 import { site, firstName } from '../config/site';
+import heroPoster from '../assets/hero-poster.png';
+
+const poster = await getImage({ src: heroPoster, format: 'webp', width: 1600 });
 ---
 
 <section class="hero">
-  <div class="container">
-    <Greeting />
-    <h1><strong>I'm {firstName}</strong> — {site.headline}</h1>
-    <p class="lead">{site.tagline}</p>
+  <video class="hero-video" autoplay muted loop playsinline preload="auto" poster={poster.src} aria-hidden="true">
+    <source src="/hero.mp4" type="video/mp4" />
+  </video>
+  <div class="hero-shade" aria-hidden="true"></div>
+
+  <div class="container hero-inner">
     <LocalTime />
+    <Greeting />
+    <h1>I'm <strong>{firstName}</strong> — <span class="gradient-text">{site.headline}</span></h1>
+    <p class="lead">{site.tagline}</p>
 
     <div class="actions">
-      <a class="btn" href="#projects">See my projects</a>
+      <a class="btn magnetic" href="#projects">See my projects <span aria-hidden="true">→</span></a>
+      <a class="btn btn-ghost magnetic" href="#contact">Get in touch</a>
     </div>
   </div>
+
+  <a class="scroll-cue" href="#about" aria-label="Scroll to About">
+    <span class="scroll-cue-line" aria-hidden="true"></span>
+    <span>Scroll</span>
+  </a>
 </section>
 
+<script>
+  // Respect reduced motion: stop the video and leave the still poster up.
+  const video = document.querySelector<HTMLVideoElement>('.hero-video');
+  if (video) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      video.removeAttribute('autoplay');
+      video.pause();
+    } else {
+      video.playbackRate = 0.7; // a touch slower = dreamier, and the 5s loop lasts ~7s
+    }
+  }
+</script>
+
 <style>
-  /* Calm, smaller line under the big animated greeting */
+  .hero {
+    /* Always-dark palette, scoped to the hero only */
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+    --accent: #818cf8;
+    --accent-hover: #a5b4fc;
+    --border: rgb(255 255 255 / 0.18);
+    --surface: rgb(255 255 255 / 0.06);
+    --on-accent: #0b0b0f;
+    color: var(--text);
+    background: #05050a;
+
+    position: relative;
+    overflow: hidden;
+    min-height: 100svh;
+    margin-top: -64px; /* slide up under the frosted header */
+    padding: 140px 0 120px;
+    display: flex;
+    align-items: center;
+  }
+
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 70% center;
+    will-change: transform;
+  }
+  .hero-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, #05050a 0%, rgb(5 5 10 / 0.75) 35%, rgb(5 5 10 / 0) 70%),
+      linear-gradient(0deg, var(--bg) 0%, transparent 22%);
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
   .hero h1 {
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    font-weight: 600;
+    font-size: clamp(1.4rem, 3vw, 2.1rem);
+    font-weight: 500;
     letter-spacing: -0.01em;
     color: var(--muted);
     margin-bottom: 0.6em;
+    max-width: 760px;
   }
   .hero h1 strong {
     color: var(--text);
-    font-weight: 800;
+    font-weight: 700;
   }
   .hero .lead {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     max-width: 520px;
+  }
+  .hero .btn-ghost {
+    backdrop-filter: blur(8px);
+    background: var(--surface);
+  }
+
+  .scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 28px;
+    z-index: 1;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .scroll-cue-line {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(var(--accent), transparent);
+    transform-origin: top;
+    animation: drip 2.2s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+  }
+  @keyframes drip {
+    0% { transform: scaleY(0); }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  @media (max-width: 760px) {
+    .hero-video { object-position: 78% center; opacity: 0.55; }
+    .hero-shade { background: linear-gradient(0deg, var(--bg) 0%, rgb(5 5 10 / 0.55) 40%, rgb(5 5 10 / 0.3) 100%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue-line { animation: none; }
   }
 </style>

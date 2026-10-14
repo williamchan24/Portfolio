@@ -5,20 +5,36 @@ import { render, type CollectionEntry } from 'astro:content';
 // Props are typed straight from the collection schema in src/content.config.ts
 interface Props {
   project: CollectionEntry<'projects'>;
+  index: number; // 1, 2, 3… shown as the big "01" number
 }
-const { project } = Astro.props;
+const { project, index } = Astro.props;
 const { title, tech, image, live, repo } = project.data;
 
 // render() turns the Markdown body of the file into a component we can drop in.
 const { Content } = await render(project);
+
+// The screenshot links to the live demo (or the repo); with neither it's just a box.
+const href = live ?? repo;
+const Media = href ? 'a' : 'div'; // a "dynamic tag": Astro renders <a> or <div>
+const number = String(index).padStart(2, '0');
 ---
 
-<article class="card project">
-  {image
-    ? <Image src={image} alt={`Screenshot of ${title}`} width={640} loading="lazy" />
-    : <div class="project-placeholder" aria-hidden="true">{title.charAt(0)}</div>}
+<article class="showcase">
+  <Media
+    class="showcase-media card"
+    {...(href ? { href, target: '_blank', rel: 'noopener', 'data-cursor': 'Open ↗' } : {})}
+    aria-label={href ? `Open ${title}` : undefined}
+  >
+    <div class="showcase-frame">
+      {image
+        ? <Image src={image} alt={`Screenshot of ${title}`} width={1100} loading="lazy" />
+        : <div class="project-placeholder" aria-hidden="true">{title.charAt(0)}</div>}
+      <span class="showcase-glare" aria-hidden="true"></span>
+    </div>
+  </Media>
 
-  <div class="card-body">
+  <div class="showcase-body">
+    <p class="showcase-index" aria-hidden="true">{number}</p>
     <h3>{title}</h3>
     <div class="project-desc"><Content /></div>
 
@@ -28,8 +44,8 @@ const { Content } = await render(project);
 
     {(live || repo) && (
       <div class="card-links">
-        {live && <a href={live} target="_blank" rel="noopener">Live demo ↗</a>}
-        {repo && <a href={repo} target="_blank" rel="noopener">Source code ↗</a>}
+        {live && <a class="btn btn-small magnetic" href={live} target="_blank" rel="noopener">Live demo ↗</a>}
+        {repo && <a class="btn btn-small btn-ghost magnetic" href={repo} target="_blank" rel="noopener">Source code ↗</a>}
       </div>
     )}
   </div>

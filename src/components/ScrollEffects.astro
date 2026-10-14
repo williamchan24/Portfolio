@@ -23,7 +23,9 @@
       '.about p',
       '.facts > div',
       '.subhead',
-      '.project-grid > *',
+      '.section-head > p',
+      '.showcase-media',
+      '.showcase-body',
       '.skills-grid > *',
       '.term',
       '.contact > *',
@@ -59,17 +61,20 @@
     // ---------- 2 + 3. Progress bar + hero drift (one rAF loop, cheap) ----------
     const bar = document.querySelector<HTMLElement>('.scroll-progress');
     const hero = document.querySelector<HTMLElement>('.hero .container');
+    const heroVideo = document.querySelector<HTMLElement>('.hero-video');
     let ticking = false;
 
     const update = () => {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const y = window.scrollY;
       if (bar) bar.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
+      const p = Math.min(y / (window.innerHeight * 0.8), 1); // 0 → 1 over ~80% of a screen
       if (hero) {
-        const p = Math.min(y / (window.innerHeight * 0.8), 1); // 0 → 1 over ~80% of a screen
         hero.style.transform = `translateY(${p * -60}px)`;
         hero.style.opacity = String(1 - p * 0.85);
       }
+      // The video slowly zooms in and sinks as you scroll away (a parallax "dolly" feel)
+      if (heroVideo) heroVideo.style.transform = `translateY(${p * 80}px) scale(${1 + p * 0.15})`;
       ticking = false;
     };
 
@@ -111,7 +116,7 @@
     right: 0;
     height: 3px;
     z-index: 100;
-    background: linear-gradient(90deg, var(--accent), #ec4899);
+    background: var(--gradient);
     transform: scaleX(0);
     transform-origin: left;
     pointer-events: none;

@@ -10,6 +10,9 @@ const year = new Date().getFullYear(); // set when you build — rebuild once a 
       {activeSocials.map(([label, url]) => (
         <li><a href={url} target="_blank" rel="noopener">{label}</a></li>
       ))}
+      <li><a href="#main">Back to top ↑</a></li>
     </ul>
   </div>
+  <!-- Giant outlined name that fills in with colour as you hover over it -->
+  <p class="footer-wordmark" aria-hidden="true">{site.shortName}</p>
 </footer>
