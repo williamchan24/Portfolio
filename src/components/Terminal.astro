@@ -23,18 +23,36 @@ const answers = {
     .map(([label, url]) => `${label}: ${url}`)
     .join('\n')}`,
 };
+
+// Facts for `neofetch`, shown next to the ASCII logo
+const neofetch: [string, string][] = [
+  ['Role', 'Websites & custom software'],
+  ['Location', site.facts['Based in'] ?? ''],
+  ['Education', site.facts.Studied ?? ''],
+  ['Currently', site.facts.Currently ?? ''],
+  ['Frontend', (site.toolkit.Frontend ?? []).join(', ')],
+  ['Backend', (site.toolkit.Backend ?? []).join(', ')],
+  ['Projects', `${projects.length} shipped (type "projects")`],
+  ['Contact', 'type "hire"'],
+];
 const user = firstName.toLowerCase();
 ---
 
 <section id="terminal" class="section">
   <div class="container">
     <h2 class="section-title" data-label="TERMINAL">Poke around</h2>
-    <div class="term" data-answers={JSON.stringify(answers)} data-user={user}>
+    <div
+      class="term"
+      data-answers={JSON.stringify(answers)}
+      data-neofetch={JSON.stringify(neofetch.filter(([, v]) => v))}
+      data-name={site.shortName}
+      data-user={user}
+    >
       <div class="term-bar" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="term-body" role="log" aria-live="polite">
         <p class="dim">{firstName}'s terminal — type <span class="ok">help</span> to see what you can do.</p>
         <label class="term-line">
-          <span class="prompt">{user}@site:~$</span>
+          <span class="prompt" data-default={`${user}@site:~$`}>{user}@site:~$</span>
           <input type="text" aria-label="Terminal command" autocomplete="off" spellcheck="false" autocapitalize="off" />
         </label>
       </div>
@@ -47,36 +65,246 @@ const user = firstName.toLowerCase();
 
   if (term) {
     const answers: Record<string, string> = JSON.parse(term.dataset.answers ?? '{}');
+    const facts: [string, string][] = JSON.parse(term.dataset.neofetch ?? '[]');
     const user = term.dataset.user;
     const body = term.querySelector<HTMLElement>('.term-body')!;
     const line = term.querySelector<HTMLElement>('.term-line')!;
+    const prompt = line.querySelector<HTMLElement>('.prompt')!;
     const input = line.querySelector<HTMLInputElement>('input')!;
     const history: string[] = [];
     let historyPos = 0;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const scrollDown = () => (body.scrollTop = body.scrollHeight);
+    const add = (el: HTMLElement) => {
+      body.insertBefore(el, line);
+      scrollDown();
+    };
+
+    // Turns URLs and email addresses in plain text into clickable links.
+    // Everything is added as text nodes / elements, so nothing typed in is ever run as HTML.
+    const LINK = /(https?:\/\/[^\s]+|[\w.+-]+@[\w-]+\.[\w.]+)/g;
+    const linkify = (el: HTMLElement, text: string) => {
+      let last = 0;
+      for (const m of text.matchAll(LINK)) {
+        el.append(text.slice(last, m.index));
+        const a = document.createElement('a');
+        const isUrl = m[0].startsWith('http');
+        a.href = isUrl ? m[0] : `mailto:${m[0]}`;
+        if (isUrl) {
+          a.target = '_blank';
+          a.rel = 'noopener';
+        }
+        a.textContent = m[0];
+        el.append(a);
+        last = m.index! + m[0].length;
+      }
+      el.append(text.slice(last));
+    };
 
     const print = (text: string, cls = '') => {
       const p = document.createElement('p');
       p.className = cls;
-      p.textContent = text; // textContent = safe, never runs anything typed in
-      body.insertBefore(p, line);
-      body.scrollTop = body.scrollHeight;
+      linkify(p, text);
+      add(p);
+    };
+
+    // ---------- neofetch: ASCII logo + facts side by side ----------
+    const LOGO = [
+      '██╗    ██╗ ██████╗',
+      '██║    ██║██╔════╝',
+      '██║ █╗ ██║██║     ',
+      '██║███╗██║██║     ',
+      '╚███╔███╔╝╚██████╗',
+      ' ╚══╝╚══╝  ╚═════╝',
+    ].join('\n');
+
+    const neofetch = () => {
+      const wrap = document.createElement('div');
+      wrap.className = 'neofetch';
+      const logo = document.createElement('pre');
+      logo.className = 'neo-logo';
+      logo.textContent = LOGO;
+      const info = document.createElement('div');
+      const title = document.createElement('p');
+      title.className = 'neo-key';
+      title.textContent = `${user}@site`;
+      const rule = document.createElement('p');
+      rule.className = 'dim';
+      rule.textContent = '─'.repeat(`${user}@site`.length);
+      info.append(title, rule);
+      for (const [key, value] of facts) {
+        const p = document.createElement('p');
+        const k = document.createElement('span');
+        k.className = 'neo-key';
+        k.textContent = `${key}: `;
+        p.append(k, value);
+        info.append(p);
+      }
+      const swatches = document.createElement('p');
+      swatches.className = 'neo-swatches';
+      ['#ff5f57', '#febc2e', '#28c840', '#818cf8', '#c084fc', '#f472b6', '#d4d4d8'].forEach((c) => {
+        const s = document.createElement('i');
+        s.style.background = c;
+        swatches.append(s);
+      });
+      info.append(swatches);
+      wrap.append(logo, info);
+      add(wrap);
+      body.scrollTop = wrap.offsetTop - body.offsetTop - 8; // show the card from its top
+    };
+
+    // ---------- matrix: green code rain over the terminal for a few seconds ----------
+    let matrixRunning = false;
+    const matrix = () => {
+      if (reduceMotion) return print('Wake up, Neo… (animation skipped: reduced motion is on)', 'ok');
+      if (matrixRunning) return;
+      matrixRunning = true;
+      const canvas = document.createElement('canvas');
+      canvas.className = 'matrix';
+      term.append(canvas);
+      const ctx = canvas.getContext('2d')!;
+      const { width, height } = term.getBoundingClientRect();
+      canvas.width = width;
+      canvas.height = height;
+      const size = 14;
+      const drops = Array.from({ length: Math.ceil(width / size) }, () => Math.random() * -40);
+      const chars = 'アイウエオカキクケコサシスセソ01WILLIAM<>{}/=+';
+      ctx.font = `${size}px monospace`;
+      let frame = 0;
+      const tick = () => {
+        ctx.fillStyle = 'rgba(13, 13, 18, 0.12)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#4ade80';
+        drops.forEach((y, i) => {
+          ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * size, y * size);
+          drops[i] = y * size > height && Math.random() > 0.97 ? 0 : y + 1;
+        });
+        if (++frame < 220) requestAnimationFrame(tick);
+        else {
+          canvas.classList.add('is-fading');
+          setTimeout(() => {
+            canvas.remove();
+            matrixRunning = false;
+            print('Wake up, Neo… the Matrix has you. 🐇', 'ok');
+          }, 500);
+        }
+      };
+      requestAnimationFrame(tick);
+    };
+
+    // ---------- hire: a short Q&A that sends through the contact form ----------
+    type Step = { key: string; ask: string; check?: (v: string) => string | null; optional?: boolean };
+    const STEPS: Step[] = [
+      { key: 'need', ask: 'What do you need built? (e.g. a website, a booking system, an internal tool)' },
+      { key: 'budget', ask: 'Rough budget? (e.g. RM 3,000, or "not sure")' },
+      { key: 'name', ask: 'Your name?', check: (v) => (v.length > 100 ? 'That name is a bit long.' : null) },
+      {
+        key: 'email',
+        ask: 'Your email, so I can reply?',
+        check: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : "That doesn't look like an email. Try again:"),
+      },
+      { key: 'details', ask: 'Anything else I should know? (press Enter to skip)', optional: true },
+    ];
+    let hire: { step: number; data: Record<string, string>; confirming: boolean } | null = null;
+
+    const setPrompt = (text?: string) => (prompt.textContent = text ?? prompt.dataset.default ?? '$');
+    const askStep = () => {
+      print(STEPS[hire!.step].ask, 'ok');
+      setPrompt('›');
+    };
+    const endHire = (msg?: string, cls = 'dim') => {
+      hire = null;
+      setPrompt();
+      if (msg) print(msg, cls);
+    };
+
+    const sendHire = async (data: Record<string, string>) => {
+      print('Sending…', 'dim');
+      const form = new FormData();
+      form.append('name', data.name);
+      form.append('email', data.email);
+      form.append('website', ''); // honeypot field the contact handler expects to be empty
+      form.append(
+        'body',
+        [
+          'Sent from the website terminal (hire)',
+          `Need: ${data.need}`,
+          `Budget: ${data.budget}`,
+          data.details ? `Details: ${data.details}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      );
+      try {
+        const res = await fetch('/contact.php', { method: 'POST', body: form, headers: { Accept: 'application/json' } });
+        const out = (await res.json()) as { ok: boolean; message?: string; errors?: Record<string, string> };
+        if (out.ok) print(`✔ ${out.message ?? "Sent! I'll get back to you soon."}`, 'ok');
+        else print(`✘ ${Object.values(out.errors ?? {}).join(' ') || 'Something went wrong.'} Try "hire" again.`, 'err');
+      } catch {
+        print('✘ Couldn\'t send right now. Use the contact form below, or try again later.', 'err');
+      }
+    };
+
+    const handleHire = (value: string) => {
+      const h = hire!;
+      if (/^(cancel|exit|quit)$/i.test(value)) return endHire('Cancelled. No worries!');
+
+      if (h.confirming) {
+        if (/^y(es)?$/i.test(value)) {
+          const data = h.data;
+          endHire();
+          void sendHire(data);
+        } else if (/^n(o)?$/i.test(value)) endHire('Not sent. Type "hire" to start again.');
+        else print('Please type y or n.', 'dim');
+        return;
+      }
+
+      const step = STEPS[h.step];
+      if (!value && !step.optional) return print('This one is needed. (type "cancel" to stop)', 'dim');
+      const problem = value ? step.check?.(value) : null;
+      if (problem) return print(problem, 'err');
+      h.data[step.key] = value;
+      h.step++;
+
+      if (h.step < STEPS.length) return askStep();
+      h.confirming = true;
+      print(
+        `Summary:\n  Need:    ${h.data.need}\n  Budget:  ${h.data.budget}\n  Name:    ${h.data.name}\n  Email:   ${h.data.email}` +
+          (h.data.details ? `\n  Details: ${h.data.details}` : ''),
+      );
+      print('Send this to William? (y/n)', 'ok');
+      setPrompt('›');
     };
 
     const COMMANDS: Record<string, () => void> = {
-      help: () => print('Commands: about, projects, skills, contact, theme, date, whoami, clear, sudo'),
+      help: () =>
+        print(
+          'Commands: about, projects, skills, contact, hire, neofetch, theme, date, whoami, clear, sudo\n' +
+            'Tip: press Tab to autocomplete, ↑/↓ for history.',
+        ),
       about: () => print(answers.about),
       projects: () => print(answers.projects),
       skills: () => print(answers.skills),
-      contact: () => print(answers.contact),
+      contact: () => print(answers.contact + '\n\nWant to work together? Type "hire".'),
+      hire: () => {
+        print("Let's build something. A few quick questions (type \"cancel\" anytime):", 'dim');
+        hire = { step: 0, data: {}, confirming: false };
+        askStep();
+      },
+      neofetch,
+      matrix,
       whoami: () => print('a curious visitor 👀'),
       date: () => print(new Date().toString()),
       theme: () => {
         document.querySelector<HTMLButtonElement>('.theme-toggle')?.click();
         print('Theme switched.', 'ok');
       },
-      clear: () => body.querySelectorAll('p').forEach((p) => p.remove()),
+      clear: () => [...body.children].forEach((el) => el !== line && el.remove()),
       sudo: () => print('Nice try. 😄 This incident will be reported.', 'ok'),
     };
+    const HIDDEN = new Set(['matrix']); // Easter eggs: work, but never autocomplete or appear in help
+    const visible = Object.keys(COMMANDS).filter((c) => !HIDDEN.has(c));
 
     // Clicking anywhere in the terminal puts the cursor in the input (unless selecting text)
     term.addEventListener('click', () => {
@@ -84,6 +312,29 @@ const user = firstName.toLowerCase();
     });
 
     input.addEventListener('keydown', (e) => {
+      // Tab completes a command name; if several match, list them
+      if (e.key === 'Tab' && !hire) {
+        const typed = input.value.trim().toLowerCase();
+        if (!typed || typed.includes(' ')) return; // let Tab move focus as normal
+        e.preventDefault();
+        const matches = visible.filter((c) => c.startsWith(typed));
+        if (matches.length === 1) input.value = matches[0];
+        else if (matches.length > 1) {
+          print(`${user}@site:~$ ${typed}`, 'dim');
+          print(matches.join('   '));
+        }
+        return;
+      }
+      // While answering `hire` questions, Enter submits the answer instead of running a command
+      if (hire) {
+        if (e.key === 'Enter') {
+          const value = input.value.trim();
+          input.value = '';
+          print(`› ${value}`, 'dim');
+          handleHire(value);
+        }
+        return;
+      }
       // ↑ / ↓ cycle through previous commands, like a real terminal
       if (e.key === 'ArrowUp' && history.length) {
         historyPos = Math.max(0, historyPos - 1);
@@ -115,6 +366,7 @@ const user = firstName.toLowerCase();
 
 <style>
   .term {
+    position: relative; /* anchors the matrix canvas */
     background: #0d0d12;
     color: #d4d4d8;
     border: 1px solid #27272f;
@@ -153,6 +405,42 @@ const user = firstName.toLowerCase();
   }
   .term-body :global(.dim) { color: #71717a; }
   .term-body :global(.ok), .ok { color: #4ade80; }
+  .term-body :global(.err) { color: #f87171; }
+  .term-body :global(a) { color: #93c5fd; text-underline-offset: 3px; }
+  .term-body :global(a:hover) { color: #bfdbfe; }
+
+  /* neofetch: logo on the left, facts on the right (stacked on narrow screens) */
+  .term-body :global(.neofetch) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 28px;
+    align-items: flex-start;
+    margin: 6px 0 10px;
+  }
+  .term-body :global(.neo-logo) {
+    margin: 0;
+    font: inherit;
+    font-size: 0.8rem;
+    line-height: 1.15;
+    background: linear-gradient(135deg, #818cf8, #c084fc 55%, #f472b6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .term-body :global(.neofetch p) { margin: 0; }
+  .term-body :global(.neo-key) { color: #818cf8; font-weight: 700; }
+  .term-body :global(.neo-swatches) { display: flex; gap: 0; margin-top: 8px; }
+  .term-body :global(.neo-swatches i) { width: 22px; height: 12px; display: block; }
+
+  /* matrix Easter egg */
+  .term :global(.matrix) {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .term :global(.matrix.is-fading) { opacity: 0; }
   .prompt { color: #818cf8; white-space: nowrap; }
   .term-line {
     display: flex;
