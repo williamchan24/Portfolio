@@ -19,6 +19,16 @@ export interface SiteConfig {
   email: string;
   socials: Record<string, string>; // empty values are hidden
   cv: string | null;
+  studio: {
+    name: string;
+    url: string;
+    enquireUrl: string; // where project enquiries should go
+    role: string;
+    intro: string[];
+    facts: Record<string, string>;
+    services: string[];
+    concepts: { name: string; note: string; url: string }[]; // design concepts I helped with
+  };
 }
 
 export const site: SiteConfig = {
@@ -26,7 +36,7 @@ export const site: SiteConfig = {
   shortName: 'William Chan',
   headline: 'I build things for the web.',
   tagline:
-    "Developer and Swinburne CS grad. Here's what I've been making.", // TODO
+    "Co-founder & CEO of Nextform Studios. Here's what I've been building.",
 
   photo: null, // TODO: drop a photo in /public and put its path here, e.g. '/me.jpg'
   about: [
@@ -34,7 +44,7 @@ export const site: SiteConfig = {
     'Most of my projects start with a simple “wouldn’t it be cool if…” — this is where I keep track of what I’m building, learning, and messing around with.', // TODO
   ],
   facts: {
-    Currently: 'Building side projects & learning Astro', // TODO
+    Currently: 'Building Nextform Studios',
     'Based in': 'Kuala Lumpur', // TODO e.g. 'Kuala Lumpur'
     Studied: 'Computer Science, Swinburne University',
   },
@@ -53,6 +63,37 @@ export const site: SiteConfig = {
   },
 
   cv: null, // e.g. '/William-Chan-CV.pdf' (put the PDF in /public)
+
+  // The "Now building" section. Project enquiries are sent to the studio, not this site.
+  studio: {
+    name: 'Nextform Studios',
+    url: 'https://www.nextformstudios.dev/',
+    enquireUrl: 'https://www.nextformstudios.dev/contact/',
+    role: 'Co-founder & CEO',
+    intro: [
+      "I'm the co-founder and CEO of Nextform Studios, a two-person software studio in Kuala Lumpur. We design and build websites, business systems and apps for Malaysian businesses.",
+      // TODO: rewrite in your own words if you like
+      'A lot of businesses still run on WhatsApp threads, spreadsheets and tools that almost fit. Nextform exists to build the software they actually need, and to stay on and look after it after launch.',
+    ],
+    facts: {
+      Role: 'Co-founder & CEO',
+      Based: 'Kuala Lumpur',
+      Stage: 'Early days, first client on board',
+    },
+    services: ['Websites', 'Web systems', 'Mobile apps', 'Payments', 'Custom software', 'POS & inventory'],
+    concepts: [
+      {
+        name: "Francesco's Barber Club",
+        note: 'Design concept', // TODO: one line on what you designed
+        url: 'https://www.nextformstudios.dev/portfolio/#francescos',
+      },
+      {
+        name: 'DNA Tuning Malaysia',
+        note: 'Design concept', // TODO: one line on what you designed
+        url: 'https://www.nextformstudios.dev/portfolio/#dna-tuning',
+      },
+    ],
+  },
 };
 
 /** Helpers used by components */

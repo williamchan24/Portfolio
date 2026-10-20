@@ -1,4 +1,6 @@
 ---
+import { site } from '../config/site';
+
 const fields = [
   { id: 'name', label: 'Name', type: 'text', autocomplete: 'name', max: 100 },
   { id: 'email', label: 'Email', type: 'email', autocomplete: 'email', max: 190 },
@@ -10,6 +12,11 @@ const fields = [
     <div>
       <h2 class="section-title" data-label="CONTACT">Let's <span class="gradient-text">talk.</span></h2>
       <p>Got a question, an idea, or just want to chat about something I've made? Drop me a message — I'd love to hear from you.</p>
+      <p>
+        Have a project in mind? Enquire through
+        <a href={site.studio.enquireUrl} target="_blank" rel="noopener">{site.studio.name} ↗</a>,
+        and we'll reply within one business day.
+      </p>
     </div>
 
     <!--

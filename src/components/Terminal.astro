@@ -22,11 +22,12 @@ const answers = {
     .filter(([, url]) => url)
     .map(([label, url]) => `${label}: ${url}`)
     .join('\n')}`,
+  nextform: `${site.studio.intro[0]}\n\nVisit:           ${site.studio.url}\nStart a project: ${site.studio.enquireUrl}`,
 };
 
 // Facts for `neofetch`, shown next to the ASCII logo
 const neofetch: [string, string][] = [
-  ['Role', 'Websites & custom software'],
+  ['Role', `${site.studio.role} @ ${site.studio.name}`],
   ['Location', site.facts['Based in'] ?? ''],
   ['Education', site.facts.Studied ?? ''],
   ['Currently', site.facts.Currently ?? ''],
@@ -45,14 +46,14 @@ const user = firstName.toLowerCase();
       class="term"
       data-answers={JSON.stringify(answers)}
       data-neofetch={JSON.stringify(neofetch.filter(([, v]) => v))}
-      data-name={site.shortName}
+      data-enquire={site.studio.enquireUrl}
       data-user={user}
     >
       <div class="term-bar" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="term-body" role="log" aria-live="polite">
         <p class="dim">{firstName}'s terminal — type <span class="ok">help</span> to see what you can do.</p>
         <label class="term-line">
-          <span class="prompt" data-default={`${user}@site:~$`}>{user}@site:~$</span>
+          <span class="prompt">{user}@site:~$</span>
           <input type="text" aria-label="Terminal command" autocomplete="off" spellcheck="false" autocapitalize="off" />
         </label>
       </div>
@@ -69,7 +70,6 @@ const user = firstName.toLowerCase();
     const user = term.dataset.user;
     const body = term.querySelector<HTMLElement>('.term-body')!;
     const line = term.querySelector<HTMLElement>('.term-line')!;
-    const prompt = line.querySelector<HTMLElement>('.prompt')!;
     const input = line.querySelector<HTMLInputElement>('input')!;
     const history: string[] = [];
     let historyPos = 0;
@@ -193,104 +193,22 @@ const user = firstName.toLowerCase();
       requestAnimationFrame(tick);
     };
 
-    // ---------- hire: a short Q&A that sends through the contact form ----------
-    type Step = { key: string; ask: string; check?: (v: string) => string | null; optional?: boolean };
-    const STEPS: Step[] = [
-      { key: 'need', ask: 'What do you need built? (e.g. a website, a booking system, an internal tool)' },
-      { key: 'budget', ask: 'Rough budget? (e.g. RM 3,000, or "not sure")' },
-      { key: 'name', ask: 'Your name?', check: (v) => (v.length > 100 ? 'That name is a bit long.' : null) },
-      {
-        key: 'email',
-        ask: 'Your email, so I can reply?',
-        check: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : "That doesn't look like an email. Try again:"),
-      },
-      { key: 'details', ask: 'Anything else I should know? (press Enter to skip)', optional: true },
-    ];
-    let hire: { step: number; data: Record<string, string>; confirming: boolean } | null = null;
-
-    const setPrompt = (text?: string) => (prompt.textContent = text ?? prompt.dataset.default ?? '$');
-    const askStep = () => {
-      print(STEPS[hire!.step].ask, 'ok');
-      setPrompt('›');
-    };
-    const endHire = (msg?: string, cls = 'dim') => {
-      hire = null;
-      setPrompt();
-      if (msg) print(msg, cls);
-    };
-
-    const sendHire = async (data: Record<string, string>) => {
-      print('Sending…', 'dim');
-      const form = new FormData();
-      form.append('name', data.name);
-      form.append('email', data.email);
-      form.append('website', ''); // honeypot field the contact handler expects to be empty
-      form.append(
-        'body',
-        [
-          'Sent from the website terminal (hire)',
-          `Need: ${data.need}`,
-          `Budget: ${data.budget}`,
-          data.details ? `Details: ${data.details}` : '',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      );
-      try {
-        const res = await fetch('/contact.php', { method: 'POST', body: form, headers: { Accept: 'application/json' } });
-        const out = (await res.json()) as { ok: boolean; message?: string; errors?: Record<string, string> };
-        if (out.ok) print(`✔ ${out.message ?? "Sent! I'll get back to you soon."}`, 'ok');
-        else print(`✘ ${Object.values(out.errors ?? {}).join(' ') || 'Something went wrong.'} Try "hire" again.`, 'err');
-      } catch {
-        print('✘ Couldn\'t send right now. Use the contact form below, or try again later.', 'err');
-      }
-    };
-
-    const handleHire = (value: string) => {
-      const h = hire!;
-      if (/^(cancel|exit|quit)$/i.test(value)) return endHire('Cancelled. No worries!');
-
-      if (h.confirming) {
-        if (/^y(es)?$/i.test(value)) {
-          const data = h.data;
-          endHire();
-          void sendHire(data);
-        } else if (/^n(o)?$/i.test(value)) endHire('Not sent. Type "hire" to start again.');
-        else print('Please type y or n.', 'dim');
-        return;
-      }
-
-      const step = STEPS[h.step];
-      if (!value && !step.optional) return print('This one is needed. (type "cancel" to stop)', 'dim');
-      const problem = value ? step.check?.(value) : null;
-      if (problem) return print(problem, 'err');
-      h.data[step.key] = value;
-      h.step++;
-
-      if (h.step < STEPS.length) return askStep();
-      h.confirming = true;
-      print(
-        `Summary:\n  Need:    ${h.data.need}\n  Budget:  ${h.data.budget}\n  Name:    ${h.data.name}\n  Email:   ${h.data.email}` +
-          (h.data.details ? `\n  Details: ${h.data.details}` : ''),
-      );
-      print('Send this to William? (y/n)', 'ok');
-      setPrompt('›');
-    };
-
     const COMMANDS: Record<string, () => void> = {
       help: () =>
         print(
-          'Commands: about, projects, skills, contact, hire, neofetch, theme, date, whoami, clear, sudo\n' +
+          'Commands: about, nextform, projects, skills, contact, hire, neofetch, theme, date, whoami, clear, sudo\n' +
             'Tip: press Tab to autocomplete, ↑/↓ for history.',
         ),
       about: () => print(answers.about),
       projects: () => print(answers.projects),
       skills: () => print(answers.skills),
       contact: () => print(answers.contact + '\n\nWant to work together? Type "hire".'),
+      nextform: () => print(answers.nextform),
+      // Project enquiries go through the studio, so `hire` opens its contact page
       hire: () => {
-        print("Let's build something. A few quick questions (type \"cancel\" anytime):", 'dim');
-        hire = { step: 0, data: {}, confirming: false };
-        askStep();
+        print("Let's build something. Project enquiries go through Nextform Studios:", 'ok');
+        print(term.dataset.enquire ?? '');
+        window.open(term.dataset.enquire, '_blank', 'noopener');
       },
       neofetch,
       matrix,
@@ -313,7 +231,7 @@ const user = firstName.toLowerCase();
 
     input.addEventListener('keydown', (e) => {
       // Tab completes a command name; if several match, list them
-      if (e.key === 'Tab' && !hire) {
+      if (e.key === 'Tab') {
         const typed = input.value.trim().toLowerCase();
         if (!typed || typed.includes(' ')) return; // let Tab move focus as normal
         e.preventDefault();
@@ -322,16 +240,6 @@ const user = firstName.toLowerCase();
         else if (matches.length > 1) {
           print(`${user}@site:~$ ${typed}`, 'dim');
           print(matches.join('   '));
-        }
-        return;
-      }
-      // While answering `hire` questions, Enter submits the answer instead of running a command
-      if (hire) {
-        if (e.key === 'Enter') {
-          const value = input.value.trim();
-          input.value = '';
-          print(`› ${value}`, 'dim');
-          handleHire(value);
         }
         return;
       }

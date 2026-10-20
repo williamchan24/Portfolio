@@ -1,0 +1,152 @@
+---
+/**
+ * "Now building" section about Nextform Studios. All the text lives in site.ts → studio.
+ * Project enquiries are sent to the studio's own contact page.
+ */
+import { site } from '../config/site';
+
+const { studio } = site;
+const host = new URL(studio.url).hostname.replace(/^www\./, '');
+---
+
+<section id="nextform" class="section">
+  <div class="container studio">
+    <div>
+      <h2 class="section-title" data-label="NOW BUILDING">
+        {studio.name.split(' ')[0]} <span class="gradient-text">{studio.name.split(' ').slice(1).join(' ')}</span>
+      </h2>
+      {studio.intro.map((paragraph) => <p>{paragraph}</p>)}
+
+      <dl class="facts">
+        {Object.entries(studio.facts).map(([label, value]) => (
+          <div><dt>{label}</dt><dd>{value}</dd></div>
+        ))}
+      </dl>
+
+      <div class="actions studio-actions">
+        <a class="btn" href={studio.enquireUrl} target="_blank" rel="noopener">Start a project ↗</a>
+        <a class="btn btn-ghost" href={studio.url} target="_blank" rel="noopener">Visit {studio.name} ↗</a>
+      </div>
+    </div>
+
+    <div class="studio-side">
+      <!-- A browser-window card that links to the studio site -->
+      <a class="card studio-window" href={studio.url} target="_blank" rel="noopener" aria-label={`Visit ${studio.name}`}>
+        <div class="studio-bar" aria-hidden="true">
+          <i></i><i></i><i></i>
+          <span>{host}</span>
+        </div>
+        <div class="studio-screen">
+          <p class="studio-kicker">Software studio · Kuala Lumpur</p>
+          <p class="studio-name">{studio.name}</p>
+          <p class="studio-line">Websites, business systems and apps, designed and built in-house.</p>
+          <ul class="tags">
+            {studio.services.map((s) => <li>{s}</li>)}
+          </ul>
+        </div>
+      </a>
+
+      {studio.concepts.length > 0 && (
+        <>
+          <h3 class="subhead">Design concepts I helped with</h3>
+          <ul class="concepts">
+            {studio.concepts.map((c) => (
+              <li>
+                <a class="card concept" href={c.url} target="_blank" rel="noopener">
+                  <span class="concept-name">{c.name}&nbsp;↗</span>
+                  <span class="concept-note">{c.note}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .studio {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: clamp(32px, 5vw, 64px);
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .studio { grid-template-columns: 1fr; }
+  }
+  .studio .facts { grid-template-columns: 1fr 1fr; }
+  .studio .facts div:last-child:nth-child(odd) { grid-column: 1 / -1; } /* odd one out spans the row */
+  .studio-actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+  .studio-window {
+    display: block;
+    overflow: hidden;
+    color: var(--text);
+    text-decoration: none;
+    transition: transform 0.25s, border-color 0.25s;
+  }
+  .studio-window:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--text); }
+  .studio-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-alt);
+  }
+  .studio-bar i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+  .studio-bar i:nth-child(1) { background: #ff5f57; }
+  .studio-bar i:nth-child(2) { background: #febc2e; }
+  .studio-bar i:nth-child(3) { background: #28c840; }
+  .studio-bar span {
+    margin-left: 10px;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .studio-screen {
+    padding: clamp(24px, 4vw, 40px);
+    background:
+      radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+      var(--surface);
+  }
+  .studio-kicker {
+    margin: 0 0 10px;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .studio-name {
+    margin: 0 0 10px;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  .studio-line { margin: 0 0 22px; color: var(--muted); }
+
+  .concepts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .concept {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px;
+    color: var(--text);
+    text-decoration: none;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .concept:hover { transform: translateY(-2px); border-color: var(--accent); color: var(--text); }
+  .concept-name { font-weight: 700; }
+  .concept-note { font-size: 0.85rem; color: var(--muted); }
+</style>
