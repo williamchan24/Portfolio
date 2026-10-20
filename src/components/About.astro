@@ -9,7 +9,7 @@ const facts = Object.entries(site.facts).filter(([, value]) => value !== '');
   <div class="container about">
     <div class="about-photo">
       {site.photo
-        ? <img src={site.photo} alt={`Portrait of ${site.shortName}`} width="320" height="320" />
+        ? <img src={site.photo} alt={`Portrait of ${site.shortName}`} width="400" height="500" />
         : <div class="avatar" aria-hidden="true">{initials}</div>}
     </div>
 

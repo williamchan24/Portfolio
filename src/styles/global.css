@@ -225,6 +225,7 @@ main { counter-reset: section; }
 /* About */
 .about { display: grid; grid-template-columns: 280px 1fr; gap: 56px; align-items: start; }
 .about-photo img, .avatar { width: 100%; aspect-ratio: 1; border-radius: 24px; object-fit: cover; }
+.about-photo img { aspect-ratio: 4 / 5; object-position: 50% 30%; } /* portrait photo (the initials avatar stays square) */
 .avatar {
     display: grid; place-items: center; font-family: var(--font-display); font-size: 5rem; font-weight: 700; color: #fff;
     background: conic-gradient(from var(--spin, 0deg), var(--accent), var(--accent-2), #c084fc, var(--accent));

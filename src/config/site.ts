@@ -38,7 +38,7 @@ export const site: SiteConfig = {
   tagline:
     "Co-founder & CEO of Nextform Studios. Here's what I've been building.",
 
-  photo: null, // TODO: drop a photo in /public and put its path here, e.g. '/me.jpg'
+  photo: '/william.jpg',
   about: [
     "I'm William. I like building things, experimenting with new tech, and turning random ideas into something that actually works.", // TODO
     'Most of my projects start with a simple “wouldn’t it be cool if…” — this is where I keep track of what I’m building, learning, and messing around with.', // TODO
