@@ -1,6 +1,6 @@
 # williamchanwinghong.com
 
-My personal site, built with **Astro + TypeScript**. It's hosted on Exabyte (cPanel): Astro builds the site into plain HTML files, and a small PHP file handles the contact form.
+My personal site, built with **Astro + TypeScript**. Astro builds the site into plain HTML files, and a small PHP file handles the contact form.
 
 ## First-time setup
 
