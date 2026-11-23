@@ -78,10 +78,9 @@ export const site: SiteConfig = {
   statement: 'Turning *random* ideas into software that actually *works*, for clients, for friends, and sometimes just because I *can*.',
   slogan: 'Always building the next thing.',
 
-  // TODO: swap the work placeholder for a real photo
   gallery: [
     { src: '/life/uni-graduation.jpg', alt: 'William in his graduation gown holding flowers by a bridge in Melbourne', caption: 'Graduation, Melbourne, Apr 2025', shape: 'tall' },
-    { src: null, alt: 'A photo of you at work', caption: 'Kuala Lumpur, 2026', shape: 'tall' },
+    { src: '/life/work-desk.jpg', alt: 'A desk with a laptop showing code, an iced kopi and the KL skyline out the window', caption: 'Kuala Lumpur', shape: 'tall' },
     { src: '/life/travel-sydney.jpg', alt: 'William smiling in front of the Sydney Opera House', caption: 'Sydney, Sep 2023', shape: 'square' },
     { src: '/life/sport-hyrox.jpg', alt: 'William carrying two 24 kg kettlebells during a HYROX race', caption: 'HYROX, Dec 2025', shape: 'tall' },
   ],

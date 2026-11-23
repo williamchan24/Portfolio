@@ -18,8 +18,17 @@ const words = site.statement.split(/\s+/).map((w) => {
 
 <section class="manifesto night" aria-labelledby="manifesto-title">
   <div class="rows" aria-hidden="true">
-    <p class="row display" data-scrub="-0.25">{rowA.map((w) => <>{w}<i class="serif">✶</i></>)}</p>
-    <p class="row row-outline display" data-scrub="0.2">{rowB.map((w) => <>{w}<i class="serif">✶</i></>)}</p>
+    <!-- Each track holds the words twice, so sliding it by half loops seamlessly -->
+    <div class="row" data-scrub="-0.08">
+      <div class="track display">
+        {[0, 1].map(() => <span>{rowA.map((w) => <>{w}<i class="serif">✶</i></>)}</span>)}
+      </div>
+    </div>
+    <div class="row row-outline" data-scrub="0.08">
+      <div class="track track-reverse display">
+        {[0, 1].map(() => <span>{rowB.map((w) => <>{w}<i class="serif">✶</i></>)}</span>)}
+      </div>
+    </div>
   </div>
 
   <div class="container m-grid">
@@ -48,13 +57,18 @@ const words = site.statement.split(/\s+/).map((w) => {
   .manifesto { position: relative; overflow: hidden; padding: clamp(80px, 10vw, 140px) 0 clamp(100px, 13vw, 180px); }
 
   .rows { margin-bottom: clamp(60px, 8vw, 120px); }
-  .row {
-    display: flex; align-items: center; width: max-content; margin: 0;
+  /* Start a little off-screen so the scroll nudge never shows an empty edge */
+  .row { margin-left: -12vw; will-change: transform; }
+  .track {
+    display: flex; width: max-content;
     font-size: clamp(4rem, 13vw, 12rem); line-height: .95; white-space: nowrap;
-    will-change: transform;
+    animation: slide 40s linear infinite;
   }
+  .track span { display: flex; align-items: center; }
+  .track-reverse { animation-direction: reverse; animation-duration: 55s; }
   .row i { font-style: normal; font-size: .45em; margin: 0 .35em; color: var(--sig-light); }
-  .row-outline { color: transparent; -webkit-text-stroke: 1.5px var(--on-night-2); margin-left: -30vw; }
+  .row-outline { color: transparent; -webkit-text-stroke: 1.5px var(--on-night-2); }
+  @keyframes slide { to { transform: translateX(-50%); } }
 
   .m-grid { display: grid; grid-template-columns: minmax(240px, 5fr) 7fr; gap: clamp(36px, 6vw, 96px); align-items: center; }
   .m-portrait { position: relative; margin: 0; }
@@ -74,5 +88,6 @@ const words = site.statement.split(/\s+/).map((w) => {
   }
   @media (prefers-reduced-motion: reduce) {
     :global(.js) .statement .w { opacity: 1; }
+    .track { animation: none; }
   }
 </style>
