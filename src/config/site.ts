@@ -66,7 +66,7 @@ export const site: SiteConfig = {
     Tools: ['Git & GitHub', 'Linux', 'VS Code', 'Figma'], // TODO
   },
 
-  email: 'williamchan388@gmail.com', // TODO: a real inbox
+  email: 'william@nextformstudios.dev',
   socials: {
     GitHub: 'https://github.com/williamchan24', // TODO
     LinkedIn: 'https://www.linkedin.com/in/william-chan-wing-hong/', // TODO
