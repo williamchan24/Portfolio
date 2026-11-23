@@ -1,0 +1,84 @@
+---
+/**
+ * All the scroll motion in one place. Opt in with data attributes:
+ *   data-reveal         fade up once it scrolls into view (delay with style="--d:.1s")
+ *   data-sign           signature draws itself once it's in view
+ *   data-scrub="-0.2"   slides sideways as you scroll (speed, negative = left)
+ *   data-parallax="40"  drifts up/down by up to N px as it crosses the screen
+ *   data-words          words light up one by one as you scroll
+ * Everything is visible by default; reduced-motion users just get the finished state.
+ */
+---
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reveal + signature: once, when 15% visible
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    }
+  }, { threshold: 0.15, rootMargin: '0px 0px -5% 0px' });
+  document.querySelectorAll('[data-reveal], [data-sign]').forEach((el) => io.observe(el));
+
+  if (!reduce) {
+    const scrubs = [...document.querySelectorAll<HTMLElement>('[data-scrub]')];
+    const parallax = [...document.querySelectorAll<HTMLElement>('[data-parallax]')];
+    const statements = [...document.querySelectorAll<HTMLElement>('[data-words]')].map((el) => ({
+      el,
+      words: [...el.querySelectorAll<HTMLElement>('.w')],
+    }));
+
+    // Only work on things near the screen
+    const near = new Set<Element>();
+    const nearIo = new IntersectionObserver((entries) => {
+      for (const e of entries) e.isIntersecting ? near.add(e.target) : near.delete(e.target);
+      queue();
+    }, { rootMargin: '25% 0px' });
+    [...scrubs, ...parallax, ...statements.map((s) => s.el)].forEach((el) => nearIo.observe(el));
+
+    // -1 when the element's centre is at the bottom of the screen, 1 at the top
+    const progress = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      return 1 - ((r.top + r.height / 2) / vh) * 2;
+    };
+
+    const frame = () => {
+      ticking = false;
+      const vw = window.innerWidth;
+      for (const el of scrubs) {
+        if (!near.has(el)) continue;
+        const speed = parseFloat(el.dataset.scrub!) || 0;
+        el.style.transform = `translate3d(${(progress(el) * speed * vw).toFixed(1)}px,0,0)`;
+      }
+      for (const el of parallax) {
+        if (!near.has(el)) continue;
+        const amount = parseFloat(el.dataset.parallax!) || 0;
+        el.style.transform = `translate3d(0,${(progress(el) * -amount).toFixed(1)}px,0)`;
+      }
+      for (const { el, words } of statements) {
+        if (!near.has(el)) continue;
+        const r = el.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // Starts lighting when the top reaches 85% down the screen, done when the bottom hits 45%
+        const t = Math.min(1, Math.max(0, (vh * 0.85 - r.top) / (vh * 0.4 + r.height)));
+        const lit = Math.round(t * words.length);
+        words.forEach((w, i) => w.classList.toggle('lit', i < lit));
+      }
+    };
+
+    let ticking = false;
+    const queue = () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(frame); }
+    };
+    window.addEventListener('scroll', queue, { passive: true });
+    window.addEventListener('resize', queue);
+    queue();
+  } else {
+    document.querySelectorAll('[data-words] .w').forEach((w) => w.classList.add('lit'));
+  }
+</script>

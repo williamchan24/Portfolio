@@ -13,40 +13,63 @@ const { title, tech, image, live, repo } = project.data;
 // render() turns the Markdown body of the file into a component we can drop in.
 const { Content } = await render(project);
 
-// The screenshot links to the live demo (or the repo); with neither it's just a box.
 const href = live ?? repo;
 const Media = href ? 'a' : 'div'; // a "dynamic tag": Astro renders <a> or <div>
 const number = String(index).padStart(2, '0');
 ---
 
-<article class="showcase">
+<article class="work" data-reveal>
   <Media
-    class="showcase-media card"
-    {...(href ? { href, target: '_blank', rel: 'noopener', 'data-cursor': 'Open ↗' } : {})}
+    class="work-media"
+    {...(href ? { href, target: '_blank', rel: 'noopener' } : {})}
     aria-label={href ? `Open ${title}` : undefined}
   >
-    <div class="showcase-frame">
-      {image
-        ? <Image src={image} alt={`Screenshot of ${title}`} width={1100} loading="lazy" />
-        : <div class="project-placeholder" aria-hidden="true">{title.charAt(0)}</div>}
-      <span class="showcase-glare" aria-hidden="true"></span>
-    </div>
+    {image
+      ? <Image src={image} alt={`Screenshot of ${title}`} width={1100} loading="lazy" />
+      : <div class="ph"><span>{title}</span></div>}
+    <span class="work-num display" aria-hidden="true">{number}</span>
+    {href && <span class="work-open" aria-hidden="true">Open ↗</span>}
   </Media>
 
-  <div class="showcase-body">
-    <p class="showcase-index" aria-hidden="true">{number}</p>
-    <h3>{title}</h3>
-    <div class="project-desc"><Content /></div>
-
-    {tech.length > 0 && (
-      <ul class="tags">{tech.map((tag) => <li>{tag}</li>)}</ul>
-    )}
-
+  <div class="work-body">
+    <h3 class="work-title display">{title}</h3>
+    <div class="work-desc"><Content /></div>
+    {tech.length > 0 && <ul class="tags">{tech.map((t) => <li>{t}</li>)}</ul>}
     {(live || repo) && (
-      <div class="card-links">
-        {live && <a class="btn btn-small magnetic" href={live} target="_blank" rel="noopener">Live demo ↗</a>}
-        {repo && <a class="btn btn-small btn-ghost magnetic" href={repo} target="_blank" rel="noopener">Source code ↗</a>}
+      <div class="work-links">
+        {live && <a class="btn btn-small" href={live} target="_blank" rel="noopener">Live demo ↗</a>}
+        {repo && <a class="btn btn-small btn-ghost" href={repo} target="_blank" rel="noopener">Source ↗</a>}
       </div>
     )}
   </div>
 </article>
+
+<style>
+  .work-media {
+    position: relative; display: block; overflow: hidden; aspect-ratio: 16 / 10;
+    border-radius: var(--radius); background: var(--night-2);
+  }
+  .work-media :global(img), .work-media .ph { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform .8s var(--ease-out); }
+  .work-num {
+    position: absolute; left: 14px; top: 14px; padding: .12em .22em .02em;
+    font-size: clamp(1.6rem, 2.4vw, 2.2rem); line-height: 1;
+    background: var(--sig); color: #fff; border-radius: 8px; pointer-events: none;
+  }
+  .work-open {
+    position: absolute; top: 14px; right: 14px; padding: 8px 14px; border-radius: 999px;
+    background: var(--sig); color: #fff; font-weight: 600; font-size: .85rem;
+    opacity: 0; translate: 0 -6px; transition: opacity .3s, translate .3s var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .work-media:hover :global(img) { transform: scale(1.04); }
+    .work-media:hover .work-open { opacity: 1; translate: 0 0; }
+  }
+
+  .work-body { padding-top: 22px; }
+  .work-title { font-size: clamp(2.2rem, 4vw, 3.6rem); }
+  .work-desc { color: var(--fg-2); margin: 10px 0 18px; max-width: 54ch; }
+  .work-desc :global(p) { margin: 0; }
+  .work-desc :global(strong) { color: var(--fg); }
+  .work-desc :global(em) { font-family: var(--f-serif); font-size: 1.15em; color: var(--accent); }
+  .work-links { display: flex; gap: 10px; margin-top: 20px; }
+</style>

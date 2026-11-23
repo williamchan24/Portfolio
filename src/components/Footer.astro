@@ -1,18 +1,57 @@
 ---
-import { site, activeSocials } from '../config/site';
-const year = new Date().getFullYear(); // set when you build — rebuild once a year to update it
+import { site, activeSocials, firstName } from '../config/site';
+import Signature from './Signature.astro';
+
+// "Always building the next thing." → last word goes serif
+const words = site.slogan.replace(/\.$/, '').split(' ');
+const last = words.pop();
+const year = new Date().getFullYear();
 ---
 
-<footer class="site-footer">
+<footer class="site-footer blue">
   <div class="container">
-    <p>© {year} {site.name}</p>
-    <ul class="socials">
-      {activeSocials.map(([label, url]) => (
-        <li><a href={url} target="_blank" rel="noopener">{label}</a></li>
-      ))}
-      <li><a href="#main">Back to top ↑</a></li>
-    </ul>
+    <p class="slogan display" data-reveal>{words.join(' ')} <span class="serif">{last}.</span></p>
+
+    <div class="f-row">
+      <div class="f-sign"><Signature label={`${firstName}'s signature`} /></div>
+      <nav class="f-links" aria-label="Footer">
+        <a href="#nextform">Nextform</a>
+        <a href="#projects">Projects</a>
+        <a href="#about">Life</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <ul class="f-socials">
+        {activeSocials.map(([name, url]) => <li><a href={url} target="_blank" rel="noopener">{name} ↗</a></li>)}
+        <li><a href={`mailto:${site.email}`}>Email ↗</a></li>
+      </ul>
+    </div>
+
+    <div class="f-base">
+      <p>© {year} {site.name}</p>
+      <a class="f-top" href="#main">Back to top ↑</a>
+    </div>
   </div>
-  <!-- Giant outlined name that fills in with colour as you hover over it -->
-  <p class="footer-wordmark" aria-hidden="true">{site.shortName}</p>
 </footer>
+
+<style>
+  .site-footer { padding: clamp(80px, 10vw, 140px) 0 28px; overflow: hidden; --sign: #fff; }
+  .slogan { font-size: clamp(3.4rem, 11.5vw, 11rem); line-height: .86; margin: 0 0 clamp(48px, 7vw, 96px); max-width: 12ch; }
+  .slogan .serif { text-transform: none; color: #fff; }
+
+  .f-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; align-items: end; padding-bottom: 40px; border-bottom: 1px solid var(--rule); }
+  .f-sign { max-width: 300px; }
+  .f-links, .f-socials { display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0; }
+  .f-links a, .f-socials a { font-weight: 600; font-size: 1.1rem; text-decoration: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .f-links a:hover, .f-socials a:hover { text-decoration: underline; }
+  }
+
+  .f-base { display: flex; justify-content: space-between; gap: 16px; padding-top: 22px; font-size: .9rem; color: var(--fg-muted); }
+  .f-base p { margin: 0; }
+  .f-top { font-weight: 600; color: #fff; text-decoration: none; }
+
+  @media (max-width: 720px) {
+    .f-row { grid-template-columns: 1fr 1fr; }
+    .f-sign { grid-column: 1 / -1; max-width: 220px; }
+  }
+</style>

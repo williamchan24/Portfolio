@@ -1,19 +1,21 @@
 ---
 /**
- * Intro screen: your name + a 0 → 100 counter, then the whole thing wipes up off the page.
- * Shown once per browser tab session (not on every reload), and skipped entirely for
- * reduced-motion users. Without JavaScript it never appears, so nothing can get stuck.
+ * Intro screen: a full ultramarine curtain with the name and a counter, then it lifts away.
+ * Shown once per browser tab session, skipped for reduced-motion users, and never shown
+ * without JavaScript, so nothing can get stuck.
  */
 import { site } from '../config/site';
+const [first, ...rest] = site.shortName.split(' ');
 ---
 
-<!-- Runs immediately (before paint) to decide whether to show the intro at all -->
+<!-- Runs before paint: marks JS as on, and decides whether to show the intro at all -->
 <script is:inline>
   (function () {
+    var root = document.documentElement;
+    root.classList.add('js');
     var seen = false;
     try { seen = sessionStorage.getItem('intro-seen') === '1'; } catch (e) {}
     if (seen || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var root = document.documentElement;
     root.classList.add('is-loading');
     // Safety net: never block the page for more than 4s, whatever happens
     setTimeout(function () { root.classList.remove('is-loading'); }, 4000);
@@ -21,13 +23,12 @@ import { site } from '../config/site';
 </script>
 
 <div class="preloader" aria-hidden="true">
-  <p class="preloader-name">
-    {site.shortName.split('').map((ch, i) => (
-      <span style={`--i:${i}`}>{ch === ' ' ? ' ' : ch}</span>
-    ))}
+  <p class="pl-name">
+    <span class="pl-first serif">{first}</span>
+    <span class="pl-last display">{rest.join(' ')}</span>
   </p>
-  <p class="preloader-count"><span>0</span>%</p>
-  <div class="preloader-bar"><i></i></div>
+  <p class="pl-foot label">Loading the good stuff</p>
+  <p class="pl-count display"><span>0</span></p>
 </div>
 
 <script>
@@ -35,98 +36,45 @@ import { site } from '../config/site';
   const loader = document.querySelector<HTMLElement>('.preloader');
 
   if (loader && root.classList.contains('is-loading')) {
-    const count = loader.querySelector<HTMLElement>('.preloader-count span')!;
-    const bar = loader.querySelector<HTMLElement>('.preloader-bar i')!;
-    const DURATION = 1800;
+    const count = loader.querySelector<HTMLElement>('.pl-count span')!;
+    const DURATION = 1500;
     const start = performance.now();
 
     const tick = (now: number) => {
       const t = Math.min((now - start) / DURATION, 1);
-      const eased = 1 - Math.pow(1 - t, 3); // ease-out: fast start, slow finish
+      const eased = 1 - Math.pow(1 - t, 3); // fast start, slow finish
       count.textContent = String(Math.round(eased * 100));
-      bar.style.transform = `scaleX(${eased})`;
       if (t < 1) requestAnimationFrame(tick);
       else {
         root.classList.add('is-loaded');
-        try {
-          sessionStorage.setItem('intro-seen', '1');
-        } catch {
-          /* storage blocked — they'll just see the intro again */
-        }
-        setTimeout(() => root.classList.remove('is-loading', 'is-loaded'), 1100);
+        try { sessionStorage.setItem('intro-seen', '1'); } catch { /* storage blocked */ }
+        setTimeout(() => root.classList.remove('is-loading', 'is-loaded'), 1000);
       }
     };
     requestAnimationFrame(tick);
   }
 </script>
 
-<style is:global>
-  .preloader {
-    display: none;
+<style>
+  .preloader { display: none; }
+  :global(html.is-loading) { overflow: hidden; }
+  :global(html.is-loading) .preloader {
+    position: fixed; inset: 0; z-index: 1000;
+    display: grid; grid-template-rows: 1fr auto; padding: var(--gutter);
+    background: var(--sig); color: #fff;
   }
-  .is-loading .preloader {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: grid;
-    place-items: center;
-    background: #05050a;
-    color: #f4f4f5;
-    clip-path: inset(0 0 0 0);
-    transition: clip-path 1s cubic-bezier(0.76, 0, 0.24, 1);
-  }
-  .is-loading {
-    overflow: hidden;
-  }
-  .is-loaded .preloader {
+  :global(html.is-loaded) .preloader {
     clip-path: inset(0 0 100% 0);
+    transition: clip-path .9s var(--ease-in-out);
   }
-
-  .preloader-name {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(2.25rem, 8vw, 6rem);
-    font-weight: 700;
-    letter-spacing: -0.04em;
-    overflow: hidden;
-    display: flex;
+  .pl-name { margin: 0; align-self: center; justify-self: center; text-align: center; }
+  .pl-first, .pl-last { display: block; animation: pl-up .9s var(--ease-out) both; }
+  .pl-first { font-size: clamp(2.2rem, 6vw, 4.5rem); line-height: 1; color: #fff; }
+  .pl-last { font-size: clamp(4.5rem, 18vw, 14rem); animation-delay: .08s; }
+  .pl-foot { margin: 0; align-self: end; color: rgb(255 255 255 / .75); }
+  .pl-count {
+    position: absolute; right: var(--gutter); bottom: calc(var(--gutter) - .1em); margin: 0;
+    font-size: clamp(3rem, 9vw, 7rem); font-variant-numeric: tabular-nums;
   }
-  .preloader-name span {
-    display: inline-block;
-    transform: translateY(110%);
-    animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    animation-delay: calc(var(--i) * 25ms);
-  }
-  .is-loaded .preloader-name span {
-    animation: none;
-    transform: translateY(-110%);
-    transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
-  }
-  @keyframes rise {
-    to { transform: none; }
-  }
-
-  .preloader-count {
-    position: absolute;
-    right: 24px;
-    bottom: 20px;
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    color: #a1a1aa;
-  }
-  .preloader-bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2px;
-  }
-  .preloader-bar i {
-    display: block;
-    height: 100%;
-    background: linear-gradient(90deg, #818cf8, #ec4899);
-    transform: scaleX(0);
-    transform-origin: left;
-  }
+  @keyframes pl-up { from { opacity: 0; transform: translateY(40%); } }
 </style>

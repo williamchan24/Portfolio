@@ -1,0 +1,78 @@
+---
+/**
+ * Dark "message from me" section: two huge rows of words slide sideways as you scroll,
+ * then the statement from site.ts lights up word by word. Words in *stars* go blue serif.
+ */
+import { site, firstName } from '../config/site';
+import Signature from './Signature.astro';
+
+const rowA = ['Founder', 'Builder', 'Tinkerer', 'Founder', 'Builder', 'Tinkerer'];
+const rowB = ['Websites', 'Systems', 'Apps', 'Ideas', 'Websites', 'Systems', 'Apps', 'Ideas'];
+
+// "*works*," → { text: 'works', accent: true, tail: ',' }
+const words = site.statement.split(/\s+/).map((w) => {
+  const m = w.match(/^\*(.+?)\*(\W*)$/);
+  return m ? { text: m[1], accent: true, tail: m[2] } : { text: w, accent: false, tail: '' };
+});
+---
+
+<section class="manifesto night" aria-labelledby="manifesto-title">
+  <div class="rows" aria-hidden="true">
+    <p class="row display" data-scrub="-0.25">{rowA.map((w) => <>{w}<i class="serif">✶</i></>)}</p>
+    <p class="row row-outline display" data-scrub="0.2">{rowB.map((w) => <>{w}<i class="serif">✶</i></>)}</p>
+  </div>
+
+  <div class="container m-grid">
+    <figure class="m-portrait" data-reveal>
+      <div class="m-photo">
+        {site.photo
+          ? <img src={site.photo} alt="" width="800" height="1000" loading="lazy" />
+          : <div class="ph"><span>Portrait</span></div>}
+      </div>
+      <Signature class="m-sign" label={`${firstName}'s signature`} />
+    </figure>
+
+    <div class="m-copy">
+      <p class="label" id="manifesto-title">A message from {firstName}</p>
+      <p class="statement display" data-words>
+        {words.map((w) => (
+          <><span class:list={['w', { serif: w.accent }]}>{w.text}</span>{w.tail && <span class="w">{w.tail}</span>}{' '}</>
+        ))}
+      </p>
+      <p class="m-sub lead" data-reveal>{site.about[1]}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .manifesto { position: relative; overflow: hidden; padding: clamp(80px, 10vw, 140px) 0 clamp(100px, 13vw, 180px); }
+
+  .rows { margin-bottom: clamp(60px, 8vw, 120px); }
+  .row {
+    display: flex; align-items: center; width: max-content; margin: 0;
+    font-size: clamp(4rem, 13vw, 12rem); line-height: .95; white-space: nowrap;
+    will-change: transform;
+  }
+  .row i { font-style: normal; font-size: .45em; margin: 0 .35em; color: var(--sig-light); }
+  .row-outline { color: transparent; -webkit-text-stroke: 1.5px var(--on-night-2); margin-left: -30vw; }
+
+  .m-grid { display: grid; grid-template-columns: minmax(240px, 5fr) 7fr; gap: clamp(36px, 6vw, 96px); align-items: center; }
+  .m-portrait { position: relative; margin: 0; }
+  .m-photo { aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: #fff; }
+  .m-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; filter: grayscale(1) contrast(1.1); }
+  .m-sign { position: absolute; left: -6%; right: 8%; bottom: -8%; --sign: var(--sig); filter: drop-shadow(0 2px 0 rgb(0 0 0 / .15)); }
+
+  .statement { font-size: clamp(2.2rem, 4.6vw, 4.4rem); line-height: .98; margin: 18px 0 28px; }
+  .statement .serif { text-transform: none; font-size: 1.08em; }
+  :global(.js) .statement .w { opacity: .18; transition: opacity .25s linear; }
+  :global(.js) .statement .w.lit { opacity: 1; }
+  .m-sub { color: var(--on-night-2); }
+
+  @media (max-width: 800px) {
+    .m-grid { grid-template-columns: 1fr; }
+    .m-portrait { max-width: 340px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .statement .w { opacity: 1; }
+  }
+</style>

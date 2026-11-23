@@ -1,0 +1,53 @@
+---
+/** Two big doors: the work side and the life side. Photos are placeholders for now. */
+const doors = [
+  { href: '#projects', kicker: 'On', title: 'Code', note: 'Projects, experiments and things I ship.', photo: 'A photo of you at your desk' },
+  { href: '#about', kicker: 'Off', title: 'Code', note: 'Sport, makan, travel and everything else.', photo: 'A photo of you off duty' },
+];
+---
+
+<section class="onoff paper" aria-label="Where to next">
+  <div class="container doors">
+    {doors.map((d, i) => (
+      <a class="door" href={d.href} data-reveal style={`--d:${i * 0.1}s`}>
+        <div class="door-ph ph" data-parallax={i ? '-24' : '24'}><span>{d.photo}</span></div>
+        <div class="door-text">
+          <p class="door-title display"><span class="serif">{d.kicker}</span> {d.title}</p>
+          <p class="door-note">{d.note}</p>
+        </div>
+        <span class="go" aria-hidden="true">→</span>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .onoff { padding: clamp(80px, 10vw, 140px) 0; }
+  .doors { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 2vw, 28px); }
+  .door {
+    position: relative; display: grid; grid-template-rows: 1fr auto; overflow: hidden;
+    min-height: clamp(420px, 48vw, 640px); padding: clamp(20px, 2.4vw, 32px);
+    border-radius: var(--radius); background: var(--paper-2); text-decoration: none;
+    transition: background-color .4s var(--ease-out), color .4s var(--ease-out);
+  }
+  .door-ph {
+    position: absolute; inset: 12% 14% 34%; border-radius: 10px;
+    background: repeating-linear-gradient(135deg, transparent 0 14px, rgb(0 0 0 / .04) 14px 15px), var(--paper);
+    box-shadow: 0 20px 40px -24px rgb(0 0 0 / .35);
+    transition: transform .6s var(--ease-out);
+  }
+  .door-text { grid-row: 2; position: relative; }
+  .door-title { font-size: clamp(3.5rem, 8vw, 7.5rem); margin: 0; }
+  .door-title .serif { font-size: .8em; text-transform: none; }
+  .door-note { margin: 6px 0 0; color: var(--muted); transition: color .4s; }
+  .door .go { position: absolute; top: clamp(20px, 2.4vw, 32px); right: clamp(20px, 2.4vw, 32px); }
+  @media (hover: hover) and (pointer: fine) {
+    .door:hover { background: var(--sig); color: #fff; }
+    .door:hover .serif, .door:hover .door-note { color: #fff; }
+    .door:hover .go { background: #fff; color: var(--sig); transform: rotate(-45deg); }
+    .door:hover .door-ph { transform: scale(1.04) rotate(-1.5deg); }
+  }
+  @media (max-width: 720px) {
+    .doors { grid-template-columns: 1fr; }
+  }
+</style>

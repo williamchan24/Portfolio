@@ -7,16 +7,16 @@ const fields = [
 ] as const;
 ---
 
-<section id="contact" class="section section-alt">
-  <div class="container contact">
-    <div>
-      <h2 class="section-title" data-label="CONTACT">Let's <span class="gradient-text">talk.</span></h2>
-      <p>Got a question, an idea, or just want to chat about something I've made? Drop me a message — I'd love to hear from you.</p>
-      <p>
-        Have a project in mind? Enquire through
-        <a href={site.studio.enquireUrl} target="_blank" rel="noopener">{site.studio.name} ↗</a>,
-        and we'll reply within one business day.
-      </p>
+<section id="contact" class="contact night" aria-labelledby="contact-title">
+  <div class="container c-grid">
+    <div class="c-copy">
+      <h2 class="heading display" id="contact-title"><span class="serif">Let's</span>Talk</h2>
+      <p class="lead">Got a question, an idea, or just want to chat about something I've made? Drop me a message. I'd love to hear from you.</p>
+      <a class="c-studio" href={site.studio.enquireUrl} target="_blank" rel="noopener">
+        <span class="label">Have a project in mind?</span>
+        <span class="c-studio-line">Enquire through {site.studio.name}, and we'll reply within one business day.</span>
+        <span class="go" aria-hidden="true">↗</span>
+      </a>
     </div>
 
     <!--
@@ -24,7 +24,7 @@ const fields = [
       that runs on the cPanel server). With JavaScript on, the script below sends it in the
       background; with JS off, the browser posts normally and PHP redirects to a thank-you page.
     -->
-    <form id="contact-form" class="card form" method="post" action="/contact.php">
+    <form id="contact-form" class="form c-form" method="post" action="/contact.php" data-reveal>
       <p class="alert" role="status" hidden></p>
 
       <!-- Honeypot: hidden from humans, bots fill it in -->
@@ -117,3 +117,26 @@ const fields = [
     }
   });
 </script>
+
+<style>
+  .contact { padding: clamp(96px, 12vw, 170px) 0; }
+  .c-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 6vw, 96px); align-items: start; }
+  .c-copy .heading { font-size: clamp(4rem, 13vw, 12rem); margin-bottom: 24px; }
+  .c-copy .lead { margin-bottom: 32px; }
+  .c-studio {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 20px;
+    padding: 20px 20px 20px 24px; border-radius: var(--radius); border: 1px solid var(--rule);
+    text-decoration: none; max-width: 480px; transition: border-color .2s, background-color .2s;
+  }
+  .c-studio .label { grid-column: 1; color: var(--accent); }
+  .c-studio-line { grid-column: 1; font-weight: 600; }
+  .c-studio .go { grid-column: 2; grid-row: 1 / 3; }
+  @media (hover: hover) and (pointer: fine) {
+    .c-studio:hover { border-color: var(--sig); background: rgb(43 59 245 / .12); }
+  }
+  .c-form { padding: clamp(24px, 3vw, 40px); border-radius: var(--radius); background: var(--night-2); border: 1px solid var(--rule); }
+  .c-form label:first-of-type { margin-top: 0; }
+  @media (max-width: 860px) {
+    .c-grid { grid-template-columns: 1fr; }
+  }
+</style>

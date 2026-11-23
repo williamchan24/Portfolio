@@ -1,0 +1,52 @@
+---
+/**
+ * Topographic contour lines, generated at build time (no image file).
+ * Each "peak" is a set of wobbly rings; change `seed` for a different map.
+ */
+interface Props {
+  seed?: number;
+  class?: string;
+}
+const { seed = 1, class: className = '' } = Astro.props;
+
+const W = 1600;
+const H = 1000;
+// A tiny seeded random so the map is the same on every build
+let s = seed * 9301 + 49297;
+const rand = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+
+const peaks = [
+  { x: W * (0.18 + rand() * 0.1), y: H * (0.25 + rand() * 0.2), rings: 16 },
+  { x: W * (0.75 + rand() * 0.1), y: H * (0.6 + rand() * 0.2), rings: 20 },
+  { x: W * (0.48 + rand() * 0.08), y: H * (1.05), rings: 12 },
+];
+
+const paths: string[] = [];
+for (const p of peaks) {
+  const a = rand() * 6.28;
+  const b = rand() * 6.28;
+  for (let i = 1; i <= p.rings; i++) {
+    const r = i * 34;
+    const pts: string[] = [];
+    const steps = 96;
+    for (let k = 0; k <= steps; k++) {
+      const t = (k / steps) * Math.PI * 2;
+      const wobble = 1 + 0.16 * Math.sin(3 * t + a + i * 0.12) + 0.08 * Math.sin(5 * t + b - i * 0.2) + 0.04 * Math.sin(9 * t + i);
+      const x = p.x + Math.cos(t) * r * wobble * 1.25;
+      const y = p.y + Math.sin(t) * r * wobble;
+      pts.push(`${k === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    paths.push(pts.join('') + 'Z');
+  }
+}
+---
+
+<svg class:list={['topo', className]} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  {paths.map((d, i) => <path d={d} class={i % 5 === 0 ? 'major' : undefined} />)}
+</svg>
+
+<style>
+  .topo { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .topo path { fill: none; stroke: var(--topo, var(--line)); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .topo path.major { stroke-width: 1.6; }
+</style>

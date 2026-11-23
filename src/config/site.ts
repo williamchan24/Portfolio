@@ -19,6 +19,16 @@ export interface SiteConfig {
   email: string;
   socials: Record<string, string>; // empty values are hidden
   cv: string | null;
+  /** The big statement section. Words wrapped in *stars* are set in the blue serif. */
+  statement: string;
+  /** Closing line at the foot of the page. */
+  slogan: string;
+  /**
+   * Photos for the "life" collage. Leave `src` as null to show a placeholder;
+   * drop the photo in /public and put its path in, e.g. '/life/kl.jpg'.
+   * `shape` sets the frame: 'tall' for portrait photos, 'square', or 'wide' for landscape.
+   */
+  gallery: { src: string | null; alt: string; caption: string; shape: 'tall' | 'square' | 'wide' }[];
   studio: {
     name: string;
     url: string;
@@ -63,6 +73,18 @@ export const site: SiteConfig = {
   },
 
   cv: null, // e.g. '/William-Chan-CV.pdf' (put the PDF in /public)
+
+  // TODO: say it in your own words; *starred* words turn blue and serif
+  statement: 'Turning *random* ideas into software that actually *works*, for clients, for friends, and sometimes just because I *can*.',
+  slogan: 'Always building the next thing.',
+
+  // TODO: swap the work placeholder for a real photo
+  gallery: [
+    { src: '/life/uni-graduation.jpg', alt: 'William in his graduation gown holding flowers by a bridge in Melbourne', caption: 'Graduation, Melbourne, Apr 2025', shape: 'tall' },
+    { src: null, alt: 'A photo of you at work', caption: 'Kuala Lumpur, 2026', shape: 'tall' },
+    { src: '/life/travel-sydney.jpg', alt: 'William smiling in front of the Sydney Opera House', caption: 'Sydney, Sep 2023', shape: 'square' },
+    { src: '/life/sport-hyrox.jpg', alt: 'William carrying two 24 kg kettlebells during a HYROX race', caption: 'HYROX, Dec 2025', shape: 'tall' },
+  ],
 
   // The "Now building" section. Project enquiries are sent to the studio, not this site.
   studio: {

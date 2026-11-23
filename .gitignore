@@ -7,3 +7,6 @@ private/storage/*
 .DS_Store
 .env
 .claude/
+
+# Original full-size photos (web versions live in public/life)
+photos/

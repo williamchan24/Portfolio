@@ -7,17 +7,16 @@ import Base from '../layouts/Base.astro';
 import Preloader from '../components/Preloader.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
-import Marquee from '../components/Marquee.astro';
+import Manifesto from '../components/Manifesto.astro';
+import OnOff from '../components/OnOff.astro';
 import Studio from '../components/Studio.astro';
-import About from '../components/About.astro';
 import Projects from '../components/Projects.astro';
+import About from '../components/About.astro';
 import Toolkit from '../components/Toolkit.astro';
+import Terminal from '../components/Terminal.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
-import ScrollEffects from '../components/ScrollEffects.astro';
-import Terminal from '../components/Terminal.astro';
-import Spotlight from '../components/Spotlight.astro';
-import Cursor from '../components/Cursor.astro';
+import Motion from '../components/Motion.astro';
 import { site } from '../config/site';
 ---
 
@@ -27,16 +26,19 @@ import { site } from '../config/site';
   <Header />
   <main id="main">
     <Hero />
-    <Marquee />
+    <Manifesto />
+    <OnOff />
     <Studio />
-    <About />
     <Projects />
+    <About />
     <Toolkit />
-    <Terminal />
+    <div class="paper terminal-wrap"><Terminal /></div>
     <Contact />
   </main>
   <Footer />
-  <ScrollEffects />
-  <Spotlight />
-  <Cursor />
+  <Motion />
 </Base>
+
+<style>
+  .terminal-wrap :global(#terminal) { padding-top: 0; }
+</style>

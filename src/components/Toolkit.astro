@@ -1,17 +1,42 @@
 ---
+/** Tools I use: a big sliding band, then the lists from site.ts → toolkit. */
 import { site } from '../config/site';
+const all = Object.values(site.toolkit).flat();
 ---
 
-<section id="toolkit" class="section">
-  <div class="container">
-    <h2 class="section-title" data-label="TOOLKIT">What I work with</h2>
-    <div class="skills-grid">
-      {Object.entries(site.toolkit).map(([group, items]) => (
-        <div class="card skill-group">
-          <h3>{group}</h3>
-          <ul class="tags">{items.map((item) => <li>{item}</li>)}</ul>
+<section id="toolkit" class="toolkit paper" aria-labelledby="toolkit-title">
+  <div class="band" aria-hidden="true">
+    <p class="band-row display" data-scrub="-0.18">{[...all, ...all].map((t) => <>{t}<i class="serif">✶</i></>)}</p>
+  </div>
+
+  <div class="container t-grid">
+    <h2 class="heading display" id="toolkit-title"><span class="serif">The</span>Toolkit</h2>
+    <div class="t-lists">
+      {Object.entries(site.toolkit).map(([group, items], i) => (
+        <div data-reveal style={`--d:${i * 0.08}s`}>
+          <p class="label">{group}</p>
+          <ul>{items.map((t) => <li>{t}</li>)}</ul>
         </div>
       ))}
     </div>
   </div>
 </section>
+
+<style>
+  .toolkit { padding: clamp(80px, 10vw, 150px) 0; overflow: hidden; }
+  .band { border-block: 1px solid var(--line); padding: 18px 0; margin-bottom: clamp(56px, 8vw, 110px); }
+  .band-row { display: flex; align-items: center; width: max-content; margin: 0 0 0 -10vw; font-size: clamp(3rem, 8vw, 7rem); white-space: nowrap; }
+  .band-row i { font-style: normal; font-size: .5em; margin: 0 .4em; color: var(--sig); }
+
+  .t-grid { display: grid; grid-template-columns: auto 1fr; gap: 40px clamp(40px, 8vw, 120px); align-items: start; }
+  .t-grid .heading { font-size: clamp(3.4rem, 8vw, 7rem); }
+  .t-lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .t-lists ul { list-style: none; margin: 12px 0 0; padding: 0; }
+  .t-lists li { padding: 10px 0; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 1.1rem; }
+  @media (max-width: 860px) {
+    .t-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .t-lists { grid-template-columns: 1fr 1fr; }
+  }
+</style>

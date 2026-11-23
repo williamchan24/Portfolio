@@ -8,45 +8,30 @@ const projects = (await getCollection('projects', ({ data }) => !data.draft)).so
 );
 ---
 
-<section id="projects" class="section section-alt">
+<section id="projects" class="projects night" aria-labelledby="projects-title">
   <div class="container">
-    <div class="section-head">
-      <h2 class="section-title" data-label="WORK">Things I've built</h2>
-      <p class="muted">Selected work — hover a screenshot, then click to try it live.</p>
+    <div class="p-head">
+      <h2 class="heading display" id="projects-title"><span class="serif">Things I've</span>Built</h2>
+      <p class="lead">Side projects and experiments. Every one is live, so go and have a play.</p>
     </div>
 
     {projects.length === 0
-      ? <p class="muted">Projects are on their way — check back soon.</p>
-      : (
-        <div class="showcase-list">
-          {projects.map((project, i) => <ProjectCard project={project} index={i + 1} />)}
-        </div>
-      )}
+      ? <p class="muted">Projects are on their way. Check back soon.</p>
+      : <div class="p-grid">{projects.map((project, i) => <ProjectCard project={project} index={i + 1} />)}</div>}
   </div>
 </section>
 
-<script>
-  // 3D tilt + moving glare on each project screenshot (mouse/trackpad only).
-  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+<style>
+  .projects { padding: clamp(96px, 12vw, 170px) 0; }
+  .p-head { display: flex; justify-content: space-between; align-items: end; gap: 24px 48px; flex-wrap: wrap; margin-bottom: clamp(48px, 7vw, 96px); }
+  .p-head .heading { font-size: clamp(4rem, 14vw, 13rem); }
+  .p-head .lead { max-width: 32ch; margin: 0 0 1em; }
 
-  if (fine && !reduceMotion) {
-    document.querySelectorAll<HTMLElement>('.showcase-media').forEach((media) => {
-      media.addEventListener('pointermove', (e) => {
-        const r = media.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width; // 0 → 1 across
-        const py = (e.clientY - r.top) / r.height; // 0 → 1 down
-        media.style.setProperty('--rx', `${(0.5 - py) * 10}deg`);
-        media.style.setProperty('--ry', `${(px - 0.5) * 14}deg`);
-        media.style.setProperty('--gx', `${px * 100}%`);
-        media.style.setProperty('--gy', `${py * 100}%`);
-        media.classList.add('is-tilting');
-      });
-      media.addEventListener('pointerleave', () => {
-        media.classList.remove('is-tilting');
-        media.style.setProperty('--rx', '0deg');
-        media.style.setProperty('--ry', '0deg');
-      });
-    });
+  .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(56px, 7vw, 100px) clamp(24px, 4vw, 64px); }
+  /* Stagger the second column down, like a scrapbook */
+  .p-grid > :global(:nth-child(even)) { margin-top: clamp(80px, 12vw, 200px); }
+  @media (max-width: 760px) {
+    .p-grid { grid-template-columns: 1fr; }
+    .p-grid > :global(:nth-child(even)) { margin-top: 0; }
   }
-</script>
+</style>

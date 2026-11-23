@@ -1,36 +1,81 @@
 ---
-import { site, initials } from '../config/site';
+/**
+ * "Life" collage: photos from site.ts → gallery (placeholders until you add real ones),
+ * plus the about paragraphs, facts and interests.
+ */
+import { site } from '../config/site';
 
-// Object.entries turns { Currently: '...', ... } into [['Currently', '...'], ...]
-const facts = Object.entries(site.facts).filter(([, value]) => value !== '');
+// A slight tilt for each photo, in order
+const tilts = [-2, 1.5, -1, 2, -1.5, 1];
 ---
 
-<section id="about" class="section">
-  <div class="container about">
-    <div class="about-photo">
-      {site.photo
-        ? <img src={site.photo} alt={`Portrait of ${site.shortName}`} width="400" height="500" />
-        : <div class="avatar" aria-hidden="true">{initials}</div>}
+<section id="about" class="life paper" aria-labelledby="life-title">
+  <div class="container">
+    <div class="l-head">
+      <h2 class="heading display" id="life-title"><span class="serif">Life</span>Off screen</h2>
+      <p class="lead">{site.about[0]}</p>
     </div>
 
-    <div>
-      <h2 class="section-title" data-label="ABOUT">About me</h2>
-      {site.about.map((paragraph) => <p>{paragraph}</p>)}
+    <ul class="collage">
+      {site.gallery.map((g, i) => (
+        <li class={`slot slot-${g.shape}`} style={`--tilt:${tilts[i % tilts.length]}deg`} data-parallax={String((i % 3) * 18 - 18)}>
+          <figure data-reveal style={`--d:${(i % 3) * 0.08}s`}>
+            <div class="ph">
+              {g.src ? <img src={g.src} alt={g.alt} loading="lazy" /> : <span>{g.alt}</span>}
+            </div>
+            <figcaption class="label">{g.caption}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
 
-      <dl class="facts">
-        {facts.map(([label, value]) => (
-          <div><dt>{label}</dt><dd>{value}</dd></div>
+    <div class="l-facts">
+      <dl>
+        {Object.entries(site.facts).filter(([, v]) => v).map(([label, value]) => (
+          <div data-reveal><dt class="label">{label}</dt><dd>{value}</dd></div>
         ))}
       </dl>
-
-      {site.interests.length > 0 && (
-        <>
-          <h3 class="subhead">Things I'm into</h3>
-          <ul class="tags">
-            {site.interests.map((item) => <li>{item}</li>)}
-          </ul>
-        </>
-      )}
+      <div data-reveal>
+        <p class="label">Into</p>
+        <ul class="tags">{site.interests.map((x) => <li>{x}</li>)}</ul>
+      </div>
     </div>
   </div>
 </section>
+
+<style>
+  .life { padding: clamp(96px, 12vw, 170px) 0; overflow: hidden; }
+  .l-head { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 24px 64px; margin-bottom: clamp(48px, 7vw, 96px); }
+  .l-head .heading { font-size: clamp(3.6rem, 11vw, 10rem); }
+  .l-head .lead { font-family: var(--f-serif); font-size: clamp(1.4rem, 2.4vw, 2rem); line-height: 1.2; color: var(--ink); max-width: 30ch; margin: 0 0 .6em; }
+
+  .collage {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items: start;
+    gap: clamp(48px, 6vw, 88px) clamp(18px, 2.4vw, 36px);
+  }
+  .slot .ph { background: repeating-linear-gradient(135deg, transparent 0 14px, rgb(0 0 0 / .04) 14px 15px), #E0DCD1; }
+  .slot figure { margin: 0; rotate: var(--tilt); }
+  .slot .ph { border-radius: 6px; box-shadow: 0 1px 0 rgb(0 0 0 / .04), 0 18px 40px -20px rgb(0 0 0 / .3); }
+  .slot figcaption { margin-top: 10px; }
+  .slot-tall .ph { aspect-ratio: 3 / 4; }
+  .slot-wide .ph { aspect-ratio: 4 / 3; }
+  .slot-square .ph { aspect-ratio: 1; }
+  /* Stagger the row like photos dropped on a table */
+  .slot:nth-child(4n + 2) { margin-top: 14%; }
+  .slot:nth-child(4n + 3) { margin-top: 34%; }
+  .slot:nth-child(4n + 4) { margin-top: 6%; }
+
+  .l-facts { display: grid; grid-template-columns: 2fr 1fr; gap: 32px 64px; margin-top: clamp(64px, 8vw, 112px); padding-top: 32px; border-top: 1px solid var(--line); }
+  .l-facts dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 0; }
+  .l-facts dd { margin: 6px 0 0; font-weight: 600; font-size: 1.1rem; }
+  .l-facts .tags { margin-top: 10px; }
+
+  @media (max-width: 860px) {
+    .l-head { grid-template-columns: 1fr; }
+    .collage { grid-template-columns: repeat(2, 1fr); }
+    .slot { grid-column: span 1 !important; margin-top: 0 !important; }
+    .slot .ph { aspect-ratio: 3 / 4 !important; }
+    .l-facts, .l-facts dl { grid-template-columns: 1fr; }
+  }
+</style>
