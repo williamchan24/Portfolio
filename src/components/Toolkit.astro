@@ -6,7 +6,10 @@ const all = Object.values(site.toolkit).flat();
 
 <section id="toolkit" class="toolkit paper" aria-labelledby="toolkit-title">
   <div class="band" aria-hidden="true">
-    <p class="band-row display" data-scrub="-0.18">{[...all, ...all].map((t) => <>{t}<i class="serif">✶</i></>)}</p>
+    <!-- The list appears twice, so sliding by half loops seamlessly -->
+    <div class="band-row display">
+      {[0, 1].map(() => <span>{all.map((t) => <>{t}<i class="serif">✶</i></>)}</span>)}
+    </div>
   </div>
 
   <div class="container t-grid">
@@ -25,7 +28,10 @@ const all = Object.values(site.toolkit).flat();
 <style>
   .toolkit { padding: clamp(80px, 10vw, 150px) 0; overflow: hidden; }
   .band { border-block: 1px solid var(--line); padding: 18px 0; margin-bottom: clamp(56px, 8vw, 110px); }
-  .band-row { display: flex; align-items: center; width: max-content; margin: 0 0 0 -10vw; font-size: clamp(3rem, 8vw, 7rem); white-space: nowrap; }
+  .band-row { display: flex; width: max-content; font-size: clamp(3rem, 8vw, 7rem); white-space: nowrap; animation: band-slide 45s linear infinite; }
+  .band-row span { display: flex; align-items: center; }
+  @keyframes band-slide { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .band-row { animation: none; } }
   .band-row i { font-style: normal; font-size: .5em; margin: 0 .4em; color: var(--sig); }
 
   .t-grid { display: grid; grid-template-columns: auto 1fr; gap: 40px clamp(40px, 8vw, 120px); align-items: start; }
