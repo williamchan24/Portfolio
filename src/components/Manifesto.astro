@@ -19,12 +19,12 @@ const words = site.statement.split(/\s+/).map((w) => {
 <section class="manifesto night" aria-labelledby="manifesto-title">
   <div class="rows" aria-hidden="true">
     <!-- Each track holds the words twice, so sliding it by half loops seamlessly -->
-    <div class="row" data-scrub="-0.08">
+    <div class="row">
       <div class="track display">
         {[0, 1].map(() => <span>{rowA.map((w) => <>{w}<i class="serif">✶</i></>)}</span>)}
       </div>
     </div>
-    <div class="row row-outline" data-scrub="0.08">
+    <div class="row row-outline">
       <div class="track track-reverse display">
         {[0, 1].map(() => <span>{rowB.map((w) => <>{w}<i class="serif">✶</i></>)}</span>)}
       </div>
@@ -57,8 +57,6 @@ const words = site.statement.split(/\s+/).map((w) => {
   .manifesto { position: relative; overflow: hidden; padding: clamp(80px, 10vw, 140px) 0 clamp(100px, 13vw, 180px); }
 
   .rows { margin-bottom: clamp(60px, 8vw, 120px); }
-  /* Start a little off-screen so the scroll nudge never shows an empty edge */
-  .row { margin-left: -12vw; will-change: transform; }
   .track {
     display: flex; width: max-content;
     font-size: clamp(4rem, 13vw, 12rem); line-height: .95; white-space: nowrap;
